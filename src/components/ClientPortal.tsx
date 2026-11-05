@@ -276,8 +276,8 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
       className={`section client-portal-section ${isIsolatedMode ? 'portal-isolated-active' : ''}`}
       id="client-portal"
     >
-      {/* Overlay Close Bar if displayed in modal view */}
-      {onClose && (
+      {/* Overlay Close Bar if displayed in modal view (hidden in isolated mode to prevent duplicate header) */}
+      {onClose && !isIsolatedMode && (
         <div className="portal-overlay-topbar">
           <div className="portal-overlay-title">
             <i className="fas fa-shield-alt"></i>

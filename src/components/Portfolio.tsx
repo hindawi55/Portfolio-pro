@@ -15,6 +15,7 @@ interface PortfolioProps {
 export const Portfolio: React.FC<PortfolioProps> = ({ currentLang, onOpenLightbox }) => {
   const [activeFilter, setActiveFilter] = useState<FilterCategory>('all');
   const [seriesActiveIndex, setSeriesActiveIndex] = useState<Record<string, number>>({});
+  const [inlineExifSeriesId, setInlineExifSeriesId] = useState<string | null>(null);
   const t = translations[currentLang];
 
   const getActiveIndex = (seriesId: string) => seriesActiveIndex[seriesId] || 0;
@@ -109,12 +110,8 @@ export const Portfolio: React.FC<PortfolioProps> = ({ currentLang, onOpenLightbo
                 </div>
               </div>
 
-              {/* Main Viewing Stage (Pure Unobstructed Artwork) */}
-              <div
-                className="series-viewer-stage"
-                onClick={() => onOpenLightbox(series, currentIndex)}
-                title={t.fullscreen_title}
-              >
+              {/* Main Viewing Stage (Pure Unobstructed Artwork - Protected from accidental click triggers) */}
+              <div className="series-viewer-stage">
                 <img
                   className="series-main-img"
                   src={photoUrl}
@@ -138,16 +135,19 @@ export const Portfolio: React.FC<PortfolioProps> = ({ currentLang, onOpenLightbo
                     title={currentLang === 'ar' ? 'معاينة كلوحة جدارية في صالة معيشة فاخرة' : 'Preview as framed wall art'}
                   >
                     <i className="fas fa-couch"></i>
-                    <span>{currentLang === 'ar' ? 'جدارية فاخرة' : 'Wall Art'}</span>
+                    <span>{currentLang === 'ar' ? 'جدارية' : 'Wall Art'}</span>
                   </button>
 
                   <div className="actionbar-divider"></div>
 
                   <button
                     type="button"
-                    className="actionbar-btn btn-tool-exif"
-                    onClick={() => onOpenLightbox(series, currentIndex, 'exif')}
-                    title={currentLang === 'ar' ? 'بيانات الكاميرا والعدسة EXIF' : 'View camera EXIF metadata'}
+                    className={`actionbar-btn btn-tool-exif ${inlineExifSeriesId === series.id ? 'active' : ''}`}
+                    onClick={() =>
+                      setInlineExifSeriesId((prev) => (prev === series.id ? null : series.id))
+                    }
+                    title={currentLang === 'ar' ? 'بيانات الكاميرا والعدسة EXIF (عرض فوري)' : 'Toggle camera EXIF metadata'}
+                    aria-expanded={inlineExifSeriesId === series.id}
                   >
                     <i className="fas fa-camera"></i>
                     <span>EXIF</span>
@@ -166,6 +166,81 @@ export const Portfolio: React.FC<PortfolioProps> = ({ currentLang, onOpenLightbo
                   </button>
                 </div>
               </div>
+
+              {/* Inline Collapsible Technical EXIF Panel (Non-intrusive, no modal jump) */}
+              {inlineExifSeriesId === series.id && (
+                <div className="series-inline-exif-drawer" role="region" aria-label="Camera EXIF">
+                  <div className="inline-exif-header">
+                    <div className="inline-exif-title">
+                      <i className="fas fa-camera-retro text-gold"></i>
+                      <span>
+                        {currentLang === 'ar'
+                          ? 'البيانات التقنية للكادر (EXIF)'
+                          : 'Technical Capture Data (EXIF)'}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      className="inline-exif-close"
+                      onClick={() => setInlineExifSeriesId(null)}
+                      aria-label="Close EXIF"
+                    >
+                      <i className="fas fa-times"></i>
+                    </button>
+                  </div>
+                  <div className="inline-exif-grid">
+                    <div className="inline-exif-item">
+                      <span className="inline-exif-label">
+                        <i className="fas fa-camera"></i>
+                        {currentLang === 'ar' ? 'الكاميرا' : 'Camera'}
+                      </span>
+                      <span className="inline-exif-val">
+                        {currentPhoto.camera || 'Sony Alpha 7 IV (Full-Frame)'}
+                      </span>
+                    </div>
+                    <div className="inline-exif-item">
+                      <span className="inline-exif-label">
+                        <i className="fas fa-circle-notch"></i>
+                        {currentLang === 'ar' ? 'العدسة' : 'Lens'}
+                      </span>
+                      <span className="inline-exif-val">
+                        {currentPhoto.lens || 'FE 35mm f/1.4 GM'}
+                      </span>
+                    </div>
+                    <div className="inline-exif-item">
+                      <span className="inline-exif-label">
+                        <i className="fas fa-sliders-h"></i>
+                        {currentLang === 'ar' ? 'التعريض' : 'Exposure'}
+                      </span>
+                      <span className="inline-exif-val">
+                        {currentPhoto.settings || '1/640s · f/2.2 · ISO 200'}
+                      </span>
+                    </div>
+                    <div className="inline-exif-item">
+                      <span className="inline-exif-label">
+                        <i className="fas fa-map-marker-alt"></i>
+                        {currentLang === 'ar' ? 'الموقع' : 'Location'}
+                      </span>
+                      <span className="inline-exif-val">
+                        {currentLang === 'ar'
+                          ? currentPhoto.locationAr || series.locationAr
+                          : currentPhoto.locationEn || series.locationEn}
+                      </span>
+                    </div>
+                    {((currentLang === 'ar' && currentPhoto.contextNoteAr) ||
+                      (currentLang === 'en' && currentPhoto.contextNoteEn)) && (
+                      <div className="inline-exif-note-box">
+                        <i className="fas fa-info-circle text-gold"></i>
+                        <span>
+                          {currentLang === 'ar'
+                            ? currentPhoto.contextNoteAr
+                            : currentPhoto.contextNoteEn}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Series Navigation Controls */}
               <div className="series-controls">

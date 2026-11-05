@@ -152,11 +152,11 @@ export const CVSection: React.FC<CVSectionProps> = ({
               className="btn btn-primary cv-btn-open-dossier"
               onClick={onOpenFullDossier}
             >
-              <i className="fas fa-folder-open"></i>
+              <i className="fas fa-file-contract"></i>
               <span>
                 {currentLang === 'ar'
-                  ? 'استعراض السيرة الذاتية والاعتمادات الكاملة'
-                  : 'View Full Official Dossier & Credentials'}
+                  ? 'ملف السيرة الذاتية ↗'
+                  : 'Curated CV File ↗'}
               </span>
             </button>
             <button
@@ -166,7 +166,7 @@ export const CVSection: React.FC<CVSectionProps> = ({
               title="Download PDF"
             >
               <i className="fas fa-download"></i>
-              <span>{t.btn_download_cv}</span>
+              <span>{currentLang === 'ar' ? 'تحميل السيرة (PDF) ↓' : 'Download CV (PDF) ↓'}</span>
             </button>
           </div>
         </div>

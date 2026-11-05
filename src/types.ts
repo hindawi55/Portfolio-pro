@@ -12,6 +12,8 @@ export interface PhotoItem {
   settings?: string;
   locationAr?: string;
   locationEn?: string;
+  contextNoteAr?: string;
+  contextNoteEn?: string;
 }
 
 export interface PhotoSeries {

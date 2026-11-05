@@ -22,7 +22,13 @@ import { StudioManager } from './components/StudioManager';
 import { ClientPortalHeader } from './components/ClientPortalHeader';
 
 export const App: React.FC = () => {
-  const [currentLang, setCurrentLang] = useState<Language>('en');
+  const [currentLang, setCurrentLang] = useState<Language>(() => {
+    try {
+      const saved = localStorage.getItem('eao_locale_v2');
+      if (saved === 'ar' || saved === 'en') return saved;
+    } catch {}
+    return 'en'; // Global default to English for international jury & NGOs; user toggle persists in eao_locale_v2
+  });
   const [lightboxSeries, setLightboxSeries] = useState<PhotoSeries | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number>(0);
   const [lightboxInitialMode, setLightboxInitialMode] = useState<'default' | 'exif' | 'wallart'>('default');
@@ -43,31 +49,35 @@ export const App: React.FC = () => {
     document.title = translations[currentLang].pageTitle;
   }, [currentLang]);
 
-  // Listen for hash triggers: #portal?pin=..., #studio, #cv-dossier
+  // Listen for hash and pathname triggers: #portal?pin=..., #studio or /studio, #cv-dossier
   useEffect(() => {
-    const handleHash = () => {
-      const hash = window.location.hash;
-      // Only auto-open client portal if pin is provided explicitly in hash (secure direct client link)
-      if (hash.startsWith('#client-portal') || hash.startsWith('#portal')) {
-        if (hash.includes('pin=')) {
-          setIsClientPortalOpen(true);
-        } else {
-          // Remove leftover/stale hash so the visitor lands cleanly on the homepage
-          try {
-            history.replaceState(null, '', window.location.pathname + window.location.search);
-          } catch {
-            // Ignore if restricted
-          }
-        }
-      } else if (hash.startsWith('#studio')) {
+    const handleNavigationRoutes = () => {
+      const hash = window.location.hash || '';
+      const path = window.location.pathname || '';
+
+      // Check /studio or #studio
+      if (path === '/studio' || path.startsWith('/studio/') || hash.startsWith('#studio')) {
         setIsStudioManagerOpen(true);
       } else if (hash.startsWith('#cv-dossier')) {
         setIsCVDossierOpen(true);
+      } else if (hash.startsWith('#client-portal') || hash.startsWith('#portal')) {
+        if (hash.includes('pin=')) {
+          setIsClientPortalOpen(true);
+        } else {
+          try {
+            history.replaceState(null, '', window.location.pathname + window.location.search);
+          } catch {}
+        }
       }
     };
-    handleHash();
-    window.addEventListener('hashchange', handleHash);
-    return () => window.removeEventListener('hashchange', handleHash);
+
+    handleNavigationRoutes();
+    window.addEventListener('hashchange', handleNavigationRoutes);
+    window.addEventListener('popstate', handleNavigationRoutes);
+    return () => {
+      window.removeEventListener('hashchange', handleNavigationRoutes);
+      window.removeEventListener('popstate', handleNavigationRoutes);
+    };
   }, []);
 
   // Image preloading in idle time
@@ -95,7 +105,13 @@ export const App: React.FC = () => {
   }, []);
 
   const toggleLanguage = () => {
-    setCurrentLang((prev) => (prev === 'ar' ? 'en' : 'ar'));
+    setCurrentLang((prev) => {
+      const next = prev === 'ar' ? 'en' : 'ar';
+      try {
+        localStorage.setItem('eao_locale_v2', next);
+      } catch {}
+      return next;
+    });
   };
 
   const handleOpenLightbox = (
@@ -126,8 +142,8 @@ export const App: React.FC = () => {
       <CustomCursor />
       <Particles />
 
-      {/* Persistent Client Session Status Ribbon when active */}
-      {activeClientSession && (
+      {/* Persistent Client Session Status Ribbon ONLY when browsing public site (eliminates duplicate header) */}
+      {activeClientSession && !isClientIsolated && (
         <div className="client-active-ribbon">
           <div className="ribbon-inner">
             <div className="ribbon-client-info">

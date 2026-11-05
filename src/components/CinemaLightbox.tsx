@@ -104,14 +104,6 @@ export const CinemaLightbox: React.FC<CinemaLightboxProps> = ({
     }
   };
 
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen?.().catch(() => {});
-    } else {
-      document.exitFullscreen?.().catch(() => {});
-    }
-  };
-
   if (!series || !currentPhoto) return null;
 
   const photoUrl = getPhotoUrl(series.folder, currentPhoto.file);
@@ -141,7 +133,7 @@ export const CinemaLightbox: React.FC<CinemaLightboxProps> = ({
       aria-modal="true"
       aria-label="Fullscreen Gallery"
     >
-      {/* Top Header */}
+      {/* Top Header: Pristine, uncluttered with safe margins */}
       <div className="lightbox-header">
         <div className="lightbox-info">
           <span className="lightbox-series-tag" id="lightboxSeriesTag">
@@ -152,46 +144,16 @@ export const CinemaLightbox: React.FC<CinemaLightboxProps> = ({
           </h3>
         </div>
 
-        <div className="lightbox-actions">
-          {/* EXIF Toggle Button with chip */}
-          <button
-            className={`lightbox-btn lightbox-btn-feature ${showExif ? 'active' : ''}`}
-            title={t.lightbox_exif}
-            aria-label={t.lightbox_exif}
-            onClick={() => setShowExif(!showExif)}
-          >
-            <i className="fas fa-camera-retro"></i>
-            <span className="lightbox-btn-chip">EXIF</span>
-          </button>
-
-          {/* Wall Art Simulator Button with chip */}
-          <button
-            className={`lightbox-btn lightbox-btn-feature btn-wallart-accent ${showWallArt ? 'active' : ''}`}
-            title={t.lightbox_wallart}
-            aria-label={t.lightbox_wallart}
-            onClick={() => setShowWallArt(true)}
-          >
-            <i className="fas fa-couch"></i>
-            <span className="lightbox-btn-chip">{currentLang === 'ar' ? 'معاينة جدارية' : 'Wall Art'}</span>
-          </button>
-
+        <div className="lightbox-actions-clean">
           <div className="lightbox-counter">
             <span id="lightboxCurrentIdx">{String(currentIndex + 1).padStart(2, '0')}</span> /{' '}
             <span id="lightboxTotalIdx">{String(totalPhotos).padStart(2, '0')}</span>
           </div>
 
-          <button
-            className="lightbox-btn"
-            id="lightboxFullscreenToggle"
-            title={t.lightbox_fullscreen}
-            aria-label="Toggle Fullscreen"
-            onClick={toggleFullscreen}
-          >
-            <i className="fas fa-expand"></i>
-          </button>
+          <div className="lightbox-header-spacer"></div>
 
           <button
-            className="lightbox-btn"
+            className="lightbox-btn lightbox-btn-close-safe"
             id="lightboxClose"
             title={t.lightbox_close}
             aria-label="Close Gallery"
@@ -202,14 +164,11 @@ export const CinemaLightbox: React.FC<CinemaLightboxProps> = ({
         </div>
       </div>
 
-      {/* Center Viewport & Stage */}
+      {/* Center Viewport & Stage (Protected from accidental backdrop taps) */}
       <div
         className="lightbox-stage"
         id="lightboxStage"
         ref={stageRef}
-        onClick={(e) => {
-          if (e.target === stageRef.current) onClose();
-        }}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -278,6 +237,16 @@ export const CinemaLightbox: React.FC<CinemaLightboxProps> = ({
                   </span>
                   <span className="exif-value">{photoLocation}</span>
                 </div>
+                <div className="exif-item exif-item-fullwidth">
+                  <span className="exif-label">
+                    <i className="fas fa-feather-alt text-gold"></i> {currentLang === 'ar' ? 'السياق الميداني والنزاهة التوثيقية' : 'Frontline Documentary Context'}
+                  </span>
+                  <span className="exif-value exif-context-note">
+                    {currentLang === 'ar'
+                      ? 'توثيق حي ميداني بضوء طبيعي مباشر دون تدخل أو محاكاة مصطنعة صوناً للكرامة الإنسانية.'
+                      : 'Authentic frontline observation under ambient light with strict ethical non-intervention protocols.'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -290,6 +259,31 @@ export const CinemaLightbox: React.FC<CinemaLightboxProps> = ({
           onClick={nextPhoto}
         >
           <i className={`fas ${currentLang === 'ar' ? 'fa-chevron-left' : 'fa-chevron-right'}`}></i>
+        </button>
+      </div>
+
+      {/* Sleek Floating 2-Action Capsule Bar (Zero clutter, zero wrap on phones) */}
+      <div className="lightbox-floating-capsule-bar" role="toolbar" aria-label="Photo Actions">
+        <button
+          type="button"
+          className={`capsule-action-item ${showWallArt ? 'active' : ''}`}
+          onClick={() => setShowWallArt(true)}
+          title={t.lightbox_wallart}
+        >
+          <i className="fas fa-couch"></i>
+          <span>{currentLang === 'ar' ? 'جدارية' : 'Wall Art'}</span>
+        </button>
+
+        <span className="capsule-action-sep">|</span>
+
+        <button
+          type="button"
+          className={`capsule-action-item ${showExif ? 'active' : ''}`}
+          onClick={() => setShowExif(!showExif)}
+          title={t.lightbox_exif}
+        >
+          <i className="fas fa-camera-retro"></i>
+          <span>EXIF</span>
         </button>
       </div>
 
@@ -325,14 +319,19 @@ export const CinemaLightbox: React.FC<CinemaLightboxProps> = ({
         </div>
       </div>
 
-      {/* Wall Art Room Simulator Modal */}
+      {/* Wall Art Room Simulator Modal (Authentic Museum Gallery Presentation) */}
       {showWallArt && (
         <div className="wallart-modal-backdrop" onClick={() => setShowWallArt(false)}>
           <div className="wallart-modal" onClick={(e) => e.stopPropagation()}>
             <div className="wallart-modal-header">
               <div className="wallart-modal-title">
-                <i className="fas fa-couch"></i>
-                <span>{t.wallart_title}</span>
+                <i className="fas fa-couch text-gold"></i>
+                <div className="wallart-title-block">
+                  <h4>{t.wallart_title}</h4>
+                  <span className="wallart-modal-sub">
+                    {currentLang === 'ar' ? 'محاكاة المعاينة الجدارية في صالة عرض متحفية راقية' : 'Curated Gallery Wall Simulation'}
+                  </span>
+                </div>
               </div>
               <button
                 className="wallart-modal-close"
@@ -346,10 +345,10 @@ export const CinemaLightbox: React.FC<CinemaLightboxProps> = ({
             {/* Virtual Gallery Living Room Scene */}
             <div className="wallart-stage-viewport">
               <div className="wallart-living-room">
-                {/* Wall Lamp Glow */}
+                {/* Museum Directional Gallery Spotlight */}
                 <div className="wallart-gallery-light"></div>
 
-                {/* Framed Artwork Container */}
+                {/* 3D Museum Framed Artwork with Real Passe-Partout */}
                 <div className={`wallart-frame-wrapper frame-${frameType} size-${frameSize}`}>
                   <div className="wallart-passepartout">
                     <img
@@ -361,10 +360,17 @@ export const CinemaLightbox: React.FC<CinemaLightboxProps> = ({
                   </div>
                 </div>
 
-                {/* Minimalist Designer Couch / Credenza Silhouette at bottom */}
-                <div className="wallart-furniture-silhouette">
-                  <div className="wallart-couch-cushion"></div>
-                  <div className="wallart-couch-decor"></div>
+                {/* Museum Architectural Floor & Drop Shadow */}
+                <div className="wallart-gallery-floor-shadow"></div>
+                <div className="wallart-gallery-baseboard"></div>
+
+                {/* Archival Print Specs Plaque */}
+                <div className="wallart-spec-plaque">
+                  <span className="plaque-dim">
+                    {frameSize === 'small' ? '50 × 70 cm (A2 Exhibition Print)' : '70 × 100 cm (Grand Collector Edition)'}
+                  </span>
+                  <span className="plaque-dot">·</span>
+                  <span className="plaque-paper">Hahnemühle 308gsm Cotton Rag</span>
                 </div>
               </div>
             </div>
