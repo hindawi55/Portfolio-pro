@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Language } from '../types';
-import { translations } from '../data/translations';
+import { useSiteCMS } from '../context/SiteCMSContext';
 
 interface NavigationProps {
   currentLang: Language;
@@ -16,7 +16,13 @@ export const Navigation: React.FC<NavigationProps> = ({
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
-  const t = translations[currentLang];
+  const { layout, seo, getTranslation } = useSiteCMS();
+  const t = getTranslation(currentLang);
+
+  const brandText = currentLang === 'ar' ? layout.brandNameAr : layout.brandNameEn;
+  const brandParts = brandText.trim().split(/\s+/);
+  const firstWord = brandParts[0] || (currentLang === 'ar' ? 'إنعام' : 'ENAAM');
+  const restWords = brandParts.slice(1).join(' ');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -54,11 +60,7 @@ export const Navigation: React.FC<NavigationProps> = ({
     <nav ref={navRef} className={`nav ${isScrolled ? 'scrolled' : ''}`} id="nav">
       {/* Shortened 2-word Brand Logo */}
       <a href="#home" onClick={(e) => handleNavClick(e, '#home')} className="nav-logo">
-        {currentLang === 'ar' ? (
-          <>إنعام <span>عثمان</span></>
-        ) : (
-          <>ENAAM <span>OSMAN</span></>
-        )}
+        {firstWord} {restWords && <span>{restWords}</span>}
       </a>
 
       {/* Mobile Drawer */}
@@ -74,7 +76,7 @@ export const Navigation: React.FC<NavigationProps> = ({
               <i className="fas fa-certificate"></i>
             </div>
             <div className="cv-badge-info">
-              <span className="cv-badge-name">{currentLang === 'ar' ? 'إنعام عثمان' : 'Enaam Osman'}</span>
+              <span className="cv-badge-name">{brandText}</span>
               <span className="cv-badge-role">{currentLang === 'ar' ? 'السيرة والاعتمادات الرسمية ↗' : 'Verified Credentials & Bio ↗'}</span>
             </div>
           </a>
@@ -124,7 +126,7 @@ export const Navigation: React.FC<NavigationProps> = ({
         {/* Desktop-only Social Icons */}
         <div className="nav-social desktop-only">
           <a
-            href="https://www.instagram.com/enaam_creation?igsh=azVxMWZveDJlOTFz"
+            href={seo.instagramUrl || 'https://www.instagram.com/enaam_creation?igsh=azVxMWZveDJlOTFz'}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Instagram"
@@ -140,7 +142,10 @@ export const Navigation: React.FC<NavigationProps> = ({
             <i className="fab fa-facebook-f"></i>
           </a>
           <a
-            href="https://www.linkedin.com/in/enaam-ali-6a482a306?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app"
+            href={
+              seo.linkedinUrl ||
+              'https://www.linkedin.com/in/enaam-ali-6a482a306?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app'
+            }
             target="_blank"
             rel="noopener noreferrer"
             aria-label="LinkedIn"
@@ -151,18 +156,21 @@ export const Navigation: React.FC<NavigationProps> = ({
 
         {/* Smart Unified Capsule: [ CV | Lang | Menu ] */}
         <div className="nav-control-capsule">
-          <a
-            href="#cv"
-            onClick={(e) => handleNavClick(e, '#cv')}
-            className="capsule-btn capsule-cv-btn"
-            title={t.nav_cv}
-            aria-label={t.nav_cv}
-          >
-            <i className="fas fa-file-contract"></i>
-            <span className="capsule-label">CV</span>
-          </a>
-
-          <div className="capsule-divider"></div>
+          {layout.showCvButton && (
+            <>
+              <a
+                href="#cv"
+                onClick={(e) => handleNavClick(e, '#cv')}
+                className="capsule-btn capsule-cv-btn"
+                title={t.nav_cv}
+                aria-label={t.nav_cv}
+              >
+                <i className="fas fa-file-contract"></i>
+                <span className="capsule-label">CV</span>
+              </a>
+              <div className="capsule-divider"></div>
+            </>
+          )}
 
           <button
             type="button"

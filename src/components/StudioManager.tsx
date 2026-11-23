@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Language } from '../types';
 import { sampleClientSessions, ClientSession } from '../data/clientPortalData';
 import { getPhotoUrl } from '../data/portfolioData';
+import { copyTextSafely, safeRun } from '../utils/errorDiagnostics';
 
 interface StudioManagerProps {
   currentLang: Language;
@@ -19,25 +20,27 @@ export const StudioManager: React.FC<StudioManagerProps> = ({
   const [selectedSession, setSelectedSession] = useState<ClientSession>(sampleClientSessions[0]);
   const [copiedPin, setCopiedPin] = useState<string | null>(null);
 
-  const handleCopyClientLink = (session: ClientSession) => {
-    const origin = window.location.origin;
-    const path = window.location.pathname;
-    const clientRestrictedLink = `${origin}${path}#portal?pin=${session.pin}&access=client_restricted`;
+  const handleCopyClientLink = async (session: ClientSession) => {
+    const clientRestrictedLink = safeRun(
+      'StudioManager',
+      'buildClientRestrictedLink',
+      () => {
+        const origin = window.location.origin;
+        const path = window.location.pathname;
+        return `${origin}${path}#portal?pin=${session.pin}&access=client_restricted`;
+      },
+      `#portal?pin=${session.pin}&access=client_restricted`,
+      'warning'
+    );
 
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(clientRestrictedLink).then(
-        () => {
-          setCopiedPin(session.pin);
-          setTimeout(() => setCopiedPin(null), 3500);
-          onShowToast(
-            currentLang === 'ar'
-              ? `تم توليد ونسخ الرابط السري المقيد لـ (${session.clientNameAr}) بنجاح! يمكن إرساله للعميل الآن 🔗`
-              : `Restricted 1-click client link generated & copied for ${session.clientNameEn}! 🔗`
-          );
-        },
-        () => {
-          onShowToast(clientRestrictedLink);
-        }
+    const copied = await copyTextSafely('StudioManager', clientRestrictedLink);
+    if (copied) {
+      setCopiedPin(session.pin);
+      setTimeout(() => setCopiedPin(null), 3500);
+      onShowToast(
+        currentLang === 'ar'
+          ? `تم توليد ونسخ الرابط السري المقيد لـ (${session.clientNameAr}) بنجاح! يمكن إرساله للعميل الآن 🔗`
+          : `Restricted 1-click client link generated & copied for ${session.clientNameEn}! 🔗`
       );
     } else {
       onShowToast(clientRestrictedLink);

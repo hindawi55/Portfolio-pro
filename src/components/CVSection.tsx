@@ -1,6 +1,7 @@
 import React from 'react';
 import { Language } from '../types';
-import { translations } from '../data/translations';
+import { useSiteCMS } from '../context/SiteCMSContext';
+import { safeRun } from '../utils/errorDiagnostics';
 
 interface CVSectionProps {
   currentLang: Language;
@@ -11,11 +12,20 @@ export const CVSection: React.FC<CVSectionProps> = ({
   currentLang,
   onOpenFullDossier,
 }) => {
-  const t = translations[currentLang];
+  const { getTranslation } = useSiteCMS();
+  const t = getTranslation(currentLang);
 
   const handlePrint = (e: React.MouseEvent) => {
     e.stopPropagation();
-    window.print();
+    safeRun(
+      'CVSection',
+      'printCVSummary',
+      () => {
+        window.print();
+      },
+      undefined,
+      'warning'
+    );
   };
 
   return (

@@ -1,13 +1,14 @@
 import React from 'react';
 import { Language } from '../types';
-import { translations } from '../data/translations';
+import { useSiteCMS } from '../context/SiteCMSContext';
 
 interface MissionProps {
   currentLang: Language;
 }
 
 export const Mission: React.FC<MissionProps> = ({ currentLang }) => {
-  const t = translations[currentLang];
+  const { getTranslation } = useSiteCMS();
+  const t = getTranslation(currentLang);
 
   return (
     <section className="section mission" id="mission">

@@ -1,0 +1,383 @@
+/* ========================================================
+   FRAMELESS LUXURY PHOTOGRAPHY PROOFING GRID
+   ======================================================== */
+.portal-proofing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 28px;
+}
+
+.proof-frameless-card {
+  background: rgba(14, 18, 25, 0.92);
+  border: 1px solid rgba(226, 177, 112, 0.18);
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  position: relative;
+  cursor: pointer;
+}
+
+.proof-frameless-card:hover {
+  border-color: rgba(226, 177, 112, 0.5);
+  transform: translateY(-5px);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7);
+}
+
+.proof-frameless-card.is-favorite {
+  border-color: rgba(226, 177, 112, 0.75);
+  box-shadow: 0 0 30px rgba(226, 177, 112, 0.2);
+}
+
+.proof-img-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  background: #080a0d;
+}
+
+.proof-img-art {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.proof-frameless-card:hover .proof-img-art {
+  transform: scale(1.04);
+}
+
+/* Top Badges */
+.proof-top-badges {
+  position: absolute;
+  top: 12px;
+  inset-inline-start: 12px;
+  inset-inline-end: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.proof-id-badge {
+  background: rgba(10, 12, 16, 0.88);
+  backdrop-filter: blur(8px);
+  color: var(--accent);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 0.92rem;
+  letter-spacing: 1px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(226, 177, 112, 0.3);
+  pointer-events: auto;
+}
+
+.proof-heart-pill {
+  pointer-events: auto;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(10, 12, 16, 0.82);
+  backdrop-filter: blur(8px);
+  color: var(--text-secondary);
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.25s ease;
+  min-height: 34px;
+}
+
+.proof-heart-pill:hover {
+  background: rgba(255, 71, 87, 0.2);
+  border-color: #ff4757;
+  color: #ff4757;
+}
+
+.proof-heart-pill.is-fav {
+  background: #ff4757;
+  border-color: #ff4757;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(255, 71, 87, 0.45);
+}
+
+/* Dedicated Clean Proof Action Toolbar (Positioned Below Image, Zero Obstruction) */
+.proof-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  background: rgba(14, 18, 25, 0.7);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-wrap: wrap;
+}
+
+.proof-action-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  flex: 1;
+  white-space: nowrap;
+  transition: all 0.22s ease;
+}
+
+.proof-action-btn i {
+  color: var(--accent);
+  font-size: 0.85rem;
+}
+
+.proof-action-btn:hover {
+  background: rgba(226, 177, 112, 0.16);
+  border-color: rgba(226, 177, 112, 0.5);
+  color: #ffffff;
+}
+
+.proof-action-btn.has-note {
+  border-color: rgba(226, 177, 112, 0.5);
+  color: var(--accent);
+  background: rgba(226, 177, 112, 0.15);
+}
+
+.proof-action-btn.proof-tool-dl {
+  background: rgba(226, 177, 112, 0.08);
+  border-color: rgba(226, 177, 112, 0.25);
+  color: var(--accent);
+}
+
+.proof-action-btn.proof-tool-dl:hover {
+  background: var(--accent);
+  color: #0c0f14;
+}
+
+.portal-btn-share {
+  border-color: rgba(226, 177, 112, 0.45) !important;
+  color: var(--accent) !important;
+  background: rgba(226, 177, 112, 0.08) !important;
+}
+
+.portal-btn-share:hover {
+  background: var(--accent) !important;
+  color: #0d1117 !important;
+}
+
+.footer-utility-link-row {
+  margin: 18px 0 6px;
+  display: flex;
+  justify-content: center;
+}
+
+.footer-client-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed rgba(226, 177, 112, 0.3);
+  padding: 6px 18px;
+  border-radius: 9999px;
+  text-decoration: none;
+  transition: all 0.25s ease;
+}
+
+.footer-client-link i {
+  color: var(--accent);
+  font-size: 0.85rem;
+}
+
+.footer-client-link:hover {
+  background: rgba(226, 177, 112, 0.14);
+  border-color: var(--accent);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+/* Card Typographic Footer */
+.proof-card-footer {
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.proof-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.proof-photo-title {
+  font-size: 0.96rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.proof-res-tag {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.proof-tech-sub {
+  font-size: 0.78rem;
+  color: var(--accent-light);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.85;
+}
+
+.proof-tech-sub i {
+  font-size: 0.65rem;
+  color: var(--accent);
+}
+
+/* Saved Note Callout Pill */
+.proof-saved-note-pill {
+  background: rgba(226, 177, 112, 0.08);
+  border-inline-start: 3px solid var(--accent);
+  border: 1px solid rgba(226, 177, 112, 0.25);
+  border-inline-start-width: 3px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  color: var(--accent-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.note-text-content {
+  flex: 1;
+  line-height: 1.5;
+}
+
+.note-edit-icon {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  padding: 4px;
+}
+
+/* Inline Note Composer */
+.proof-note-composer {
+  background: rgba(12, 15, 21, 0.98);
+  border: 1px solid rgba(226, 177, 112, 0.35);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: noteSlide 0.25s ease-out;
+}
+
+@keyframes noteSlide {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.proof-note-composer textarea {
+  width: 100%;
+  background: rgba(22, 26, 35, 0.9);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: var(--text-primary);
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.85rem;
+  resize: vertical;
+}
+
+.proof-note-composer textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.note-composer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.note-btn-cancel,
+.note-btn-save {
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 34px;
+}
+
+.note-btn-cancel {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.note-btn-save {
+  background: var(--gradient-1);
+  border: none;
+  color: var(--primary);
+}
+
+/* Responsive Overrides for Mobile Proofing */
+@media (max-width: 768px) {
+  .portal-proofing-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .portal-session-banner {
+    padding: 20px;
+  }
+
+  .session-actions-top {
+    width: 100%;
+  }
+
+  .session-actions-top .btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .ribbon-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ribbon-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+

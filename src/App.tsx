@@ -20,15 +20,62 @@ import { CinemaLightbox } from './components/CinemaLightbox';
 import { CVDossierModal } from './components/CVDossierModal';
 import { StudioManager } from './components/StudioManager';
 import { ClientPortalHeader } from './components/ClientPortalHeader';
+import { AdminStudioModal } from './components/admin/AdminStudioModal';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { useSiteCMS } from './context/SiteCMSContext';
+import { SiteSectionId } from './types/cms';
+import { safeRun } from './utils/errorDiagnostics';
+
+function resolveInitialLanguage(): Language {
+  // Purge legacy persistent keys so old cached Arabic sessions never override the English default
+  safeRun(
+    'App.Locale',
+    'purgeLegacyStorageKeys',
+    () => {
+      localStorage.removeItem('eao_lang');
+      localStorage.removeItem('eao_locale_v2');
+    },
+    undefined,
+    'warning'
+  );
+
+  // Allow explicit URL query override (?lang=ar or ?lang=en) for direct shareable links
+  const queryLang = safeRun<Language | null>(
+    'App.Locale',
+    'readUrlLanguageParam',
+    () => {
+      const params = new URLSearchParams(window.location.search);
+      const urlLang = params.get('lang');
+      if (urlLang === 'ar' || urlLang === 'en') {
+        sessionStorage.setItem('eao_session_lang', urlLang);
+        return urlLang;
+      }
+      return null;
+    },
+    null,
+    'warning'
+  );
+  if (queryLang) return queryLang;
+
+  // Preserve manual toggle within the active browser tab session only
+  const sessionLang = safeRun<Language | null>(
+    'App.Locale',
+    'readSessionLanguage',
+    () => {
+      const sessionSaved = sessionStorage.getItem('eao_session_lang');
+      return sessionSaved === 'ar' || sessionSaved === 'en' ? sessionSaved : null;
+    },
+    null,
+    'warning'
+  );
+  if (sessionLang) return sessionLang;
+
+  // Default every fresh visit strictly to English for international audiences & NGOs
+  return 'en';
+}
 
 export const App: React.FC = () => {
-  const [currentLang, setCurrentLang] = useState<Language>(() => {
-    try {
-      const saved = localStorage.getItem('eao_locale_v2');
-      if (saved === 'ar' || saved === 'en') return saved;
-    } catch {}
-    return 'en'; // Global default to English for international jury & NGOs; user toggle persists in eao_locale_v2
-  });
+  const [currentLang, setCurrentLang] = useState<Language>(resolveInitialLanguage);
   const [lightboxSeries, setLightboxSeries] = useState<PhotoSeries | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number>(0);
   const [lightboxInitialMode, setLightboxInitialMode] = useState<'default' | 'exif' | 'wallart'>('default');
@@ -38,37 +85,47 @@ export const App: React.FC = () => {
   const [isClientPortalOpen, setIsClientPortalOpen] = useState<boolean>(false);
   const [isCVDossierOpen, setIsCVDossierOpen] = useState<boolean>(false);
   const [isStudioManagerOpen, setIsStudioManagerOpen] = useState<boolean>(false);
+  const [isAdminStudioOpen, setIsAdminStudioOpen] = useState<boolean>(false);
 
-  const t = translations[currentLang];
+  const { layout, seo, getTranslation } = useSiteCMS();
+  const t = getTranslation(currentLang);
 
-  // Sync document language and direction
+  // Sync document language, direction, and dynamic White-Label SEO title
   useEffect(() => {
     document.documentElement.lang = currentLang;
     document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
     document.body.setAttribute('dir', currentLang === 'ar' ? 'rtl' : 'ltr');
-    document.title = translations[currentLang].pageTitle;
-  }, [currentLang]);
+    const customTitle = currentLang === 'ar' ? seo.siteTitleAr : seo.siteTitleEn;
+    document.title = customTitle || translations[currentLang].pageTitle;
+  }, [currentLang, seo.siteTitleAr, seo.siteTitleEn]);
 
   // Listen for hash and pathname triggers: #portal?pin=..., #studio or /studio, #cv-dossier
   useEffect(() => {
     const handleNavigationRoutes = () => {
-      const hash = window.location.hash || '';
-      const path = window.location.pathname || '';
+      safeRun(
+        'App.Router',
+        'handleNavigationRoutes',
+        () => {
+          const hash = window.location.hash || '';
+          const path = window.location.pathname || '';
 
-      // Check /studio or #studio
-      if (path === '/studio' || path.startsWith('/studio/') || hash.startsWith('#studio')) {
-        setIsStudioManagerOpen(true);
-      } else if (hash.startsWith('#cv-dossier')) {
-        setIsCVDossierOpen(true);
-      } else if (hash.startsWith('#client-portal') || hash.startsWith('#portal')) {
-        if (hash.includes('pin=')) {
-          setIsClientPortalOpen(true);
-        } else {
-          try {
-            history.replaceState(null, '', window.location.pathname + window.location.search);
-          } catch {}
-        }
-      }
+          if (path === '/admin' || path.startsWith('/admin/') || hash.startsWith('#admin')) {
+            setIsAdminStudioOpen(true);
+          } else if (path === '/studio' || path.startsWith('/studio/') || hash.startsWith('#studio')) {
+            setIsStudioManagerOpen(true);
+          } else if (hash.startsWith('#cv-dossier')) {
+            setIsCVDossierOpen(true);
+          } else if (hash.startsWith('#client-portal') || hash.startsWith('#portal')) {
+            if (hash.includes('pin=')) {
+              setIsClientPortalOpen(true);
+            } else {
+              history.replaceState(null, '', window.location.pathname + window.location.search);
+            }
+          }
+        },
+        undefined,
+        'warning'
+      );
     };
 
     handleNavigationRoutes();
@@ -82,34 +139,48 @@ export const App: React.FC = () => {
 
   // Image preloading in idle time
   useEffect(() => {
-    const urls: string[] = [];
-    photoSeriesData.forEach((series) => {
-      series.photos.forEach((photo) => {
-        urls.push(getPhotoUrl(series.folder, photo.file));
-      });
-    });
+    safeRun(
+      'App.Preloader',
+      'preloadPortfolioPhotos',
+      () => {
+        const urls: string[] = [];
+        photoSeriesData.forEach((series) => {
+          series.photos.forEach((photo) => {
+            urls.push(getPhotoUrl(series.folder, photo.file));
+          });
+        });
 
-    let qIdx = 0;
-    const loadNext = () => {
-      if (qIdx >= urls.length) return;
-      const img = new Image();
-      img.src = urls[qIdx++];
-      setTimeout(loadNext, 40);
-    };
+        let qIdx = 0;
+        const loadNext = () => {
+          if (qIdx >= urls.length) return;
+          const img = new Image();
+          img.src = urls[qIdx++];
+          setTimeout(loadNext, 40);
+        };
 
-    if ('requestIdleCallback' in window) {
-      window.requestIdleCallback(() => loadNext());
-    } else {
-      setTimeout(loadNext, 200);
-    }
+        if ('requestIdleCallback' in window) {
+          window.requestIdleCallback(() => loadNext());
+        } else {
+          setTimeout(loadNext, 200);
+        }
+      },
+      undefined,
+      'warning'
+    );
   }, []);
 
   const toggleLanguage = () => {
     setCurrentLang((prev) => {
       const next = prev === 'ar' ? 'en' : 'ar';
-      try {
-        localStorage.setItem('eao_locale_v2', next);
-      } catch {}
+      safeRun(
+        'App.Locale',
+        'persistSessionLanguage',
+        () => {
+          sessionStorage.setItem('eao_session_lang', next);
+        },
+        undefined,
+        'warning'
+      );
       return next;
     });
   };
@@ -207,32 +278,100 @@ export const App: React.FC = () => {
         {/* If in Isolated Client Mode, display only the Client Proofing Workspace */}
         {activeClientSession && isClientIsolated ? (
           <div className="isolated-client-view">
-            <ClientPortal
+            <ErrorBoundary
+              scope="section"
+              moduleName="Client Portal"
               currentLang={currentLang}
-              onShowToast={showToast}
-              onOpenLightbox={handleOpenLightbox}
-              isIsolatedMode={true}
-              onToggleIsolatedMode={setIsClientIsolated}
-              onSessionStateChange={setActiveClientSession}
-              onClose={() => {
+              onReset={() => {
                 setIsClientIsolated(false);
                 setIsClientPortalOpen(false);
               }}
-            />
+            >
+              <ClientPortal
+                currentLang={currentLang}
+                onShowToast={showToast}
+                onOpenLightbox={handleOpenLightbox}
+                isIsolatedMode={true}
+                onToggleIsolatedMode={setIsClientIsolated}
+                onSessionStateChange={setActiveClientSession}
+                onClose={() => {
+                  setIsClientIsolated(false);
+                  setIsClientPortalOpen(false);
+                }}
+              />
+            </ErrorBoundary>
           </div>
         ) : (
-          /* Standard Public Website Layout (100% Free of Private Authentication Boxes) */
+          /* Dynamic CMS-Controlled Public Website Layout */
           <>
-            <Hero currentLang={currentLang} />
-            <About currentLang={currentLang} />
-            <CVSection
-              currentLang={currentLang}
-              onOpenFullDossier={() => setIsCVDossierOpen(true)}
-            />
-            <Portfolio currentLang={currentLang} onOpenLightbox={handleOpenLightbox} />
-            <Mission currentLang={currentLang} />
-            <Services currentLang={currentLang} />
-            <Contact currentLang={currentLang} onShowToast={showToast} />
+            {layout.sectionOrder
+              .filter((sectionId) => !layout.hiddenSections.includes(sectionId))
+              .map((sectionId: SiteSectionId) => {
+                switch (sectionId) {
+                  case 'hero':
+                    return (
+                      <ErrorBoundary key="hero" scope="section" moduleName="Hero" currentLang={currentLang}>
+                        <Hero currentLang={currentLang} />
+                      </ErrorBoundary>
+                    );
+                  case 'about':
+                    return (
+                      <ErrorBoundary key="about" scope="section" moduleName="About" currentLang={currentLang}>
+                        <About currentLang={currentLang} />
+                      </ErrorBoundary>
+                    );
+                  case 'cv':
+                    return (
+                      <ErrorBoundary
+                        key="cv"
+                        scope="section"
+                        moduleName="Curriculum Vitae"
+                        currentLang={currentLang}
+                      >
+                        <CVSection
+                          currentLang={currentLang}
+                          onOpenFullDossier={() => setIsCVDossierOpen(true)}
+                        />
+                      </ErrorBoundary>
+                    );
+                  case 'portfolio':
+                    return (
+                      <ErrorBoundary
+                        key="portfolio"
+                        scope="section"
+                        moduleName="Portfolio Gallery"
+                        currentLang={currentLang}
+                      >
+                        <Portfolio currentLang={currentLang} onOpenLightbox={handleOpenLightbox} />
+                      </ErrorBoundary>
+                    );
+                  case 'mission':
+                    return (
+                      <ErrorBoundary key="mission" scope="section" moduleName="Mission" currentLang={currentLang}>
+                        <Mission currentLang={currentLang} />
+                      </ErrorBoundary>
+                    );
+                  case 'services':
+                    return (
+                      <ErrorBoundary key="services" scope="section" moduleName="Services" currentLang={currentLang}>
+                        <Services currentLang={currentLang} />
+                      </ErrorBoundary>
+                    );
+                  case 'contact':
+                    return (
+                      <ErrorBoundary
+                        key="contact"
+                        scope="section"
+                        moduleName="Contact & Booking"
+                        currentLang={currentLang}
+                      >
+                        <Contact currentLang={currentLang} onShowToast={showToast} />
+                      </ErrorBoundary>
+                    );
+                  default:
+                    return null;
+                }
+              })}
           </>
         )}
       </main>
@@ -241,73 +380,175 @@ export const App: React.FC = () => {
       {isClientPortalOpen && !isClientIsolated && (
         <div className="portal-modal-overlay" role="dialog" aria-modal="true">
           <div className="portal-modal-dialog">
-            <ClientPortal
+            <ErrorBoundary
+              scope="modal"
+              moduleName="Client Portal Modal"
               currentLang={currentLang}
-              onShowToast={showToast}
-              onOpenLightbox={handleOpenLightbox}
-              isIsolatedMode={false}
-              onToggleIsolatedMode={setIsClientIsolated}
-              onSessionStateChange={setActiveClientSession}
-              onClose={() => {
-                setIsClientPortalOpen(false);
-                if (window.location.hash.startsWith('#client-portal') || window.location.hash.startsWith('#portal')) {
-                  history.replaceState(null, '', ' ');
-                }
-              }}
-            />
+              onReset={() => setIsClientPortalOpen(false)}
+            >
+              <ClientPortal
+                currentLang={currentLang}
+                onShowToast={showToast}
+                onOpenLightbox={handleOpenLightbox}
+                isIsolatedMode={false}
+                onToggleIsolatedMode={setIsClientIsolated}
+                onSessionStateChange={setActiveClientSession}
+                onClose={() => {
+                  setIsClientPortalOpen(false);
+                  safeRun(
+                    'App.Router',
+                    'clearPortalHash',
+                    () => {
+                      if (
+                        window.location.hash.startsWith('#client-portal') ||
+                        window.location.hash.startsWith('#portal')
+                      ) {
+                        history.replaceState(
+                          null,
+                          '',
+                          window.location.pathname + window.location.search
+                        );
+                      }
+                    },
+                    undefined,
+                    'warning'
+                  );
+                }}
+              />
+            </ErrorBoundary>
           </div>
         </div>
       )}
 
       {/* Dedicated Fullscreen CV Dossier Modal */}
       {isCVDossierOpen && (
-        <CVDossierModal
+        <ErrorBoundary
+          scope="modal"
+          moduleName="CV Dossier Modal"
           currentLang={currentLang}
-          onClose={() => {
-            setIsCVDossierOpen(false);
-            if (window.location.hash.startsWith('#cv-dossier')) {
-              history.replaceState(null, '', ' ');
-            }
-          }}
-          onShowToast={showToast}
-        />
+          onReset={() => setIsCVDossierOpen(false)}
+        >
+          <CVDossierModal
+            currentLang={currentLang}
+            onClose={() => {
+              setIsCVDossierOpen(false);
+              safeRun(
+                'App.Router',
+                'clearCVHash',
+                () => {
+                  if (window.location.hash.startsWith('#cv-dossier')) {
+                    history.replaceState(
+                      null,
+                      '',
+                      window.location.pathname + window.location.search
+                    );
+                  }
+                },
+                undefined,
+                'warning'
+              );
+            }}
+            onShowToast={showToast}
+          />
+        </ErrorBoundary>
       )}
 
       {/* Developer / Photographer Studio Manager (/studio or #studio) */}
       {isStudioManagerOpen && (
-        <StudioManager
+        <ErrorBoundary
+          scope="modal"
+          moduleName="Studio Manager"
           currentLang={currentLang}
-          onShowToast={showToast}
-          onOpenClientSession={(session) => {
-            setIsStudioManagerOpen(false);
-            setActiveClientSession(session);
-            setIsClientIsolated(true);
-          }}
-          onClose={() => {
-            setIsStudioManagerOpen(false);
-            if (window.location.hash.startsWith('#studio')) {
-              history.replaceState(null, '', ' ');
-            }
-          }}
-        />
+          onReset={() => setIsStudioManagerOpen(false)}
+        >
+          <StudioManager
+            currentLang={currentLang}
+            onShowToast={showToast}
+            onOpenClientSession={(session) => {
+              setIsStudioManagerOpen(false);
+              setActiveClientSession(session);
+              setIsClientIsolated(true);
+            }}
+            onClose={() => {
+              setIsStudioManagerOpen(false);
+              safeRun(
+                'App.Router',
+                'clearStudioHash',
+                () => {
+                  if (window.location.hash.startsWith('#studio')) {
+                    history.replaceState(
+                      null,
+                      '',
+                      window.location.pathname + window.location.search
+                    );
+                  }
+                },
+                undefined,
+                'warning'
+              );
+            }}
+          />
+        </ErrorBoundary>
+      )}
+
+      {/* Luxe Studio OS Cloud Admin Panel (/admin or #admin) */}
+      {isAdminStudioOpen && (
+        <ErrorBoundary
+          scope="modal"
+          moduleName="Luxe Studio OS"
+          currentLang={currentLang}
+          onReset={() => setIsAdminStudioOpen(false)}
+        >
+          <AdminStudioModal
+            currentLang={currentLang}
+            onToggleLang={toggleLanguage}
+            onShowToast={showToast}
+            onClose={() => {
+              setIsAdminStudioOpen(false);
+              safeRun(
+                'App.Router',
+                'clearAdminHash',
+                () => {
+                  if (window.location.hash.startsWith('#admin')) {
+                    history.replaceState(
+                      null,
+                      '',
+                      window.location.pathname + window.location.search
+                    );
+                  }
+                },
+                undefined,
+                'warning'
+              );
+            }}
+          />
+        </ErrorBoundary>
       )}
 
       {!isClientIsolated && (
         <Footer
           currentLang={currentLang}
           onOpenClientPortal={() => setIsClientPortalOpen(true)}
+          onOpenAdminStudio={() => setIsAdminStudioOpen(true)}
         />
       )}
 
       {lightboxSeries && (
-        <CinemaLightbox
+        <ErrorBoundary
+          scope="modal"
+          moduleName="Cinema Lightbox & Wall Art"
           currentLang={currentLang}
-          series={lightboxSeries}
-          currentIndex={lightboxIndex}
-          initialMode={lightboxInitialMode}
-          onClose={handleCloseLightbox}
-          onSelectPhoto={setLightboxIndex}
-        />
+          onReset={handleCloseLightbox}
+        >
+          <CinemaLightbox
+            currentLang={currentLang}
+            series={lightboxSeries}
+            currentIndex={lightboxIndex}
+            initialMode={lightboxInitialMode}
+            onClose={handleCloseLightbox}
+            onSelectPhoto={setLightboxIndex}
+          />
+        </ErrorBoundary>
       )}
 
       {toastMessage && (

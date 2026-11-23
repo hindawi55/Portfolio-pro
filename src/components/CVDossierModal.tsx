@@ -1,7 +1,15 @@
 import React, { useState } from 'react';
 import { Language } from '../types';
-import { translations } from '../data/translations';
-import { cvData } from '../data/cvData';
+import { useSiteCMS } from '../context/SiteCMSContext';
+import { FALLBACK_IMAGE_URL } from '../utils/assets';
+import { copyTextSafely, safeRun } from '../utils/errorDiagnostics';
+import { CVManifestoWing } from './cv/CVManifestoWing';
+import {
+  CVExhibitionsWing,
+  CVAwardsWing,
+  CVGearWing,
+  CVPartnersWing,
+} from './cv/CVTimelineWings';
 
 interface CVDossierModalProps {
   currentLang: Language;
@@ -17,21 +25,51 @@ export const CVDossierModal: React.FC<CVDossierModalProps> = ({
   onShowToast,
 }) => {
   const [activeWing, setActiveWing] = useState<CVWing>('manifesto');
-  const t = translations[currentLang];
+  const { cvDossier, getTranslation } = useSiteCMS();
+  const t = getTranslation(currentLang);
 
   const handlePrint = () => {
-    window.print();
+    const ok = safeRun(
+      'CVDossierModal',
+      'printCVDocument',
+      () => {
+        window.print();
+        return true;
+      },
+      false,
+      'warning'
+    );
+    if (!ok) {
+      onShowToast(
+        currentLang === 'ar'
+          ? 'تعذّر فتح نافذة الطباعة في هذا المتصفح.'
+          : 'Unable to open print dialog in this browser.'
+      );
+    }
   };
 
-  const handleCopyBio = () => {
-    const bioText = currentLang === 'ar' ? cvData.artistStatementAr : cvData.artistStatementEn;
-    navigator.clipboard.writeText(bioText);
+  const handleCopyBio = async () => {
+    const bioText =
+      currentLang === 'ar' ? cvDossier.artistStatementAr : cvDossier.artistStatementEn;
+    const copied = await copyTextSafely('CVDossierModal', bioText);
     onShowToast(
-      currentLang === 'ar'
-        ? 'تم نسخ البيان الفني بنجاح إلى الحافظة.'
-        : 'Artist statement copied to clipboard.'
+      copied
+        ? currentLang === 'ar'
+          ? 'تم نسخ البيان الفني بنجاح إلى الحافظة.'
+          : 'Artist statement copied to clipboard.'
+        : currentLang === 'ar'
+        ? 'تعذّر النسخ التلقائي في هذا المتصفح، يمكنك تحديد النص ونسخه يدوياً.'
+        : 'Automatic copy unavailable in this browser; please select and copy manually.'
     );
   };
+
+  const wings: { id: CVWing; icon: string; title: string; num: string }[] = [
+    { id: 'manifesto', icon: 'fa-feather-alt', title: t.cv_tab_statement, num: '01' },
+    { id: 'exhibitions', icon: 'fa-landmark', title: t.cv_tab_exhibitions, num: '02' },
+    { id: 'awards', icon: 'fa-award', title: t.cv_tab_awards, num: '03' },
+    { id: 'gear', icon: 'fa-camera', title: t.cv_tab_gear, num: '04' },
+    { id: 'partners', icon: 'fa-handshake', title: t.cv_tab_clients, num: '05' },
+  ];
 
   return (
     <div className="dossier-modal-overlay" role="dialog" aria-modal="true">
@@ -41,10 +79,11 @@ export const CVDossierModal: React.FC<CVDossierModalProps> = ({
           <div className="dossier-header-profile">
             <div className="dossier-avatar">
               <img
-                src="/images/1.jpg"
+                src={FALLBACK_IMAGE_URL}
                 alt="Enaam Ali Osman"
                 onError={(e) => {
-                  e.currentTarget.src = '/images/1.jpg';
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = FALLBACK_IMAGE_URL;
                 }}
               />
               <span className="dossier-status-dot" title="Verified Practitioner"></span>
@@ -71,7 +110,6 @@ export const CVDossierModal: React.FC<CVDossierModalProps> = ({
             </div>
           </div>
 
-          {/* Action Tools & Isolated Safe Close Container */}
           <div className="dossier-header-controls">
             <div className="dossier-action-cluster">
               <button
@@ -94,10 +132,8 @@ export const CVDossierModal: React.FC<CVDossierModalProps> = ({
               </button>
             </div>
 
-            {/* Safe Distance Divider */}
             <div className="dossier-controls-divider" aria-hidden="true"></div>
 
-            {/* Isolated Close Button with Safe Distance Target (min 44px) */}
             <div className="dossier-close-safe-zone">
               <button
                 type="button"
@@ -112,291 +148,29 @@ export const CVDossierModal: React.FC<CVDossierModalProps> = ({
           </div>
         </div>
 
-        {/* Curated Wings Navigation (أركان السيرة والاعتمادات) */}
+        {/* Curated Wings Navigation */}
         <div className="dossier-wings-nav" role="tablist" aria-label="Curated CV Wings">
-          <button
-            className={`dossier-wing-tab ${activeWing === 'manifesto' ? 'active' : ''}`}
-            onClick={() => setActiveWing('manifesto')}
-          >
-            <i className="fas fa-feather-alt"></i>
-            <span className="wing-tab-title">{t.cv_tab_statement}</span>
-            <span className="wing-badge-num">01</span>
-          </button>
-          <button
-            className={`dossier-wing-tab ${activeWing === 'exhibitions' ? 'active' : ''}`}
-            onClick={() => setActiveWing('exhibitions')}
-          >
-            <i className="fas fa-landmark"></i>
-            <span className="wing-tab-title">{t.cv_tab_exhibitions}</span>
-            <span className="wing-badge-num">02</span>
-          </button>
-          <button
-            className={`dossier-wing-tab ${activeWing === 'awards' ? 'active' : ''}`}
-            onClick={() => setActiveWing('awards')}
-          >
-            <i className="fas fa-award"></i>
-            <span className="wing-tab-title">{t.cv_tab_awards}</span>
-            <span className="wing-badge-num">03</span>
-          </button>
-          <button
-            className={`dossier-wing-tab ${activeWing === 'gear' ? 'active' : ''}`}
-            onClick={() => setActiveWing('gear')}
-          >
-            <i className="fas fa-camera"></i>
-            <span className="wing-tab-title">{t.cv_tab_gear}</span>
-            <span className="wing-badge-num">04</span>
-          </button>
-          <button
-            className={`dossier-wing-tab ${activeWing === 'partners' ? 'active' : ''}`}
-            onClick={() => setActiveWing('partners')}
-          >
-            <i className="fas fa-handshake"></i>
-            <span className="wing-tab-title">{t.cv_tab_clients}</span>
-            <span className="wing-badge-num">05</span>
-          </button>
+          {wings.map((wing) => (
+            <button
+              key={wing.id}
+              type="button"
+              className={`dossier-wing-tab ${activeWing === wing.id ? 'active' : ''}`}
+              onClick={() => setActiveWing(wing.id)}
+            >
+              <i className={`fas ${wing.icon}`}></i>
+              <span className="wing-tab-title">{wing.title}</span>
+              <span className="wing-badge-num">{wing.num}</span>
+            </button>
+          ))}
         </div>
 
-        {/* Dossier Content Body with Safe Spatial Rhythm */}
+        {/* Dossier Content Body */}
         <div className="dossier-modal-body">
-          {/* Wing 1: Manifesto, Impact Metrics & Education */}
-          {activeWing === 'manifesto' && (
-            <div className="dossier-content-card wing-manifesto">
-              {/* Impact Highlights Matrix */}
-              <div className="wing-impact-matrix">
-                <div className="impact-matrix-card">
-                  <span className="matrix-number">8+</span>
-                  <span className="matrix-label">
-                    {currentLang === 'ar' ? 'سنوات توثيق ميداني' : 'Years Field Experience'}
-                  </span>
-                </div>
-                <div className="impact-matrix-card">
-                  <span className="matrix-number">12+</span>
-                  <span className="matrix-label">
-                    {currentLang === 'ar' ? 'معرضاً ومحطة دولية' : 'Exhibitions & Stages'}
-                  </span>
-                </div>
-                <div className="impact-matrix-card">
-                  <span className="matrix-number">15+</span>
-                  <span className="matrix-label">
-                    {currentLang === 'ar' ? 'منظمة وهيئة شريكة' : 'Institutional Partners'}
-                  </span>
-                </div>
-                <div className="impact-matrix-card">
-                  <span className="matrix-number">100%</span>
-                  <span className="matrix-label">
-                    {currentLang === 'ar' ? 'معايير الحماية والكرامة' : 'Protection & Dignity'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Curated Statement Box */}
-              <div className="wing-section-block">
-                <div className="cv-statement-box">
-                  <div className="statement-header-row">
-                    <i className="fas fa-quote-right quote-accent"></i>
-                    <span className="statement-tag">
-                      {currentLang === 'ar' ? 'البيان التوثيقي المعتمد' : 'Official Documentary Manifesto'}
-                    </span>
-                  </div>
-                  <p className="statement-text">
-                    {currentLang === 'ar' ? cvData.artistStatementAr : cvData.artistStatementEn}
-                  </p>
-                </div>
-              </div>
-
-              {/* Education & Training Block with Safe Spacing */}
-              <div className="wing-section-block">
-                <h3 className="sub-title">
-                  <i className="fas fa-graduation-cap"></i>
-                  <span>{currentLang === 'ar' ? 'المؤهلات الأكاديمية والتدريبية' : 'Academic Education & Specialized Training'}</span>
-                </h3>
-                <div className="editorial-narrative-spine">
-                  {cvData.education.map((edu, idx) => (
-                    <div key={idx} className="editorial-story-milestone">
-                      <div className="editorial-chrono-node" aria-hidden="true"></div>
-                      <div className="editorial-story-card">
-                        <div className="editorial-card-header">
-                          <span className="timeline-year-chip" dir="ltr">{edu.year}</span>
-                          <span className="badge-tag">
-                            <i className="fas fa-graduation-cap text-gold" style={{ marginInlineEnd: 6 }}></i>
-                            {currentLang === 'ar' ? 'تأهيل أكاديمي موثق' : 'Accredited Qualification'}
-                          </span>
-                        </div>
-                        <h4 className="editorial-card-title">{currentLang === 'ar' ? edu.degreeAr : edu.degreeEn}</h4>
-                        <p className="editorial-meta-row">
-                          <span className="editorial-meta-item">
-                            <i className="fas fa-university text-gold"></i>
-                            <span>{currentLang === 'ar' ? edu.institutionAr : edu.institutionEn}</span>
-                          </span>
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Wing 2: International Exhibitions Timeline */}
-          {activeWing === 'exhibitions' && (
-            <div className="dossier-content-card wing-exhibitions">
-              <div className="wing-intro-bar">
-                <i className="fas fa-landmark text-gold"></i>
-                <p>
-                  {currentLang === 'ar'
-                    ? 'المحطات والمعارض الفنية والتوثيقية التي احتضنت أعمال إنعام علي عثمان محلياً ودولياً:'
-                    : 'Curated national and international exhibitions, festivals, and cultural forums showcasing Enaam Ali Osman:'}
-                </p>
-              </div>
-
-              <div className="editorial-narrative-spine">
-                {cvData.exhibitions.map((ex, idx) => (
-                  <div key={idx} className="editorial-story-milestone">
-                    <div className="editorial-chrono-node" aria-hidden="true"></div>
-                    <div className="editorial-story-card">
-                      <div className="editorial-card-header">
-                        <span className="timeline-year-chip" dir="ltr">{ex.year}</span>
-                        <span className="badge-tag">
-                          {currentLang === 'ar' ? ex.typeAr : ex.typeEn}
-                        </span>
-                        {(ex.roleAr || ex.roleEn) && (
-                          <span className="timeline-role">
-                            {currentLang === 'ar' ? ex.roleAr : ex.roleEn}
-                          </span>
-                        )}
-                      </div>
-                      <h4 className="editorial-card-title">{currentLang === 'ar' ? ex.titleAr : ex.titleEn}</h4>
-                      <p className="editorial-meta-row">
-                        <span className="editorial-meta-item">
-                          <i className="fas fa-map-marker-alt"></i>
-                          <span>{currentLang === 'ar' ? ex.locationAr : ex.locationEn}</span>
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Wing 3: Grants & Honours */}
-          {activeWing === 'awards' && (
-            <div className="dossier-content-card wing-awards">
-              <div className="wing-intro-bar">
-                <i className="fas fa-award text-gold"></i>
-                <p>
-                  {currentLang === 'ar'
-                    ? 'الجوائز والزمالات التقديرية والمنح الدولية تقديراً للالتزام بصحافة الصورة الإنسانية:'
-                    : 'Fellowships, grants, and international honors recognizing ethical documentary photojournalism:'}
-                </p>
-              </div>
-
-              <div className="editorial-narrative-spine">
-                {cvData.awards.map((award, idx) => (
-                  <div key={idx} className="editorial-story-milestone">
-                    <div className="editorial-chrono-node" aria-hidden="true"></div>
-                    <div className="editorial-story-card">
-                      <div className="editorial-card-header">
-                        <span className="timeline-year-chip" dir="ltr">{award.year}</span>
-                        {award.badge && <span className="badge-tag">{award.badge}</span>}
-                        <span className="badge-tag">
-                          <i className="fas fa-trophy text-gold" style={{ marginInlineEnd: 6 }}></i>
-                          {currentLang === 'ar' ? 'تكريم دولي' : 'Honorary Recognition'}
-                        </span>
-                      </div>
-                      <h4 className="editorial-card-title">{currentLang === 'ar' ? award.titleAr : award.titleEn}</h4>
-                      <p className="editorial-meta-row">
-                        <span className="editorial-meta-item">
-                          <i className="fas fa-landmark text-gold"></i>
-                          <span>{currentLang === 'ar' ? award.organizationAr : award.organizationEn}</span>
-                        </span>
-                      </p>
-                      <p className="editorial-card-desc">
-                        {currentLang === 'ar' ? award.descriptionAr : award.descriptionEn}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Wing 4: Field Optics & Gear Kit */}
-          {activeWing === 'gear' && (
-            <div className="dossier-content-card wing-gear">
-              <div className="wing-intro-bar">
-                <i className="fas fa-camera text-gold"></i>
-                <p>
-                  {currentLang === 'ar'
-                    ? 'العتاد التقني والعدسات الميدانية المصممة للظروف الصعبة وضمان أعلى دقة وضوح للأرشفة الدولية:'
-                    : 'Field-ready technical optics, cinema-grade sensors, and rugged gear deployed across missions:'}
-                </p>
-              </div>
-
-              <div className="editorial-narrative-spine">
-                {cvData.gear.map((kit, idx) => (
-                  <div key={idx} className="editorial-story-milestone">
-                    <div className="editorial-chrono-node" aria-hidden="true"></div>
-                    <div className="editorial-story-card">
-                      <div className="editorial-card-header">
-                        <span className="badge-tag">
-                          <i className="fas fa-toolbox text-gold" style={{ marginInlineEnd: 6 }}></i>
-                          {currentLang === 'ar' ? 'عتاد ميداني متخصص' : 'Field Technical Kit'}
-                        </span>
-                      </div>
-                      <h4 className="editorial-card-title">{currentLang === 'ar' ? kit.categoryAr : kit.categoryEn}</h4>
-
-                      <div className="gear-editorial-items-grid">
-                        {kit.items.map((item, iIdx) => (
-                          <div key={iIdx} className="gear-editorial-item-box">
-                            <div className="gear-item-head">
-                              <i className={item.icon || 'fas fa-camera text-gold'}></i>
-                              <strong className="gear-item-name">{item.name}</strong>
-                            </div>
-                            <p className="editorial-card-desc">{currentLang === 'ar' ? item.descriptionAr : item.descriptionEn}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Wing 5: Partner Network */}
-          {activeWing === 'partners' && (
-            <div className="dossier-content-card wing-partners">
-              <div className="wing-intro-bar">
-                <i className="fas fa-handshake text-gold"></i>
-                <p>
-                  {currentLang === 'ar'
-                    ? 'المنظمات والهيئات الدولية والمؤسسات المجتمعية التي وثّقت إنعام مشاريعها وبرامجها الميدانية:'
-                    : 'International organizations, UN agencies, and community bodies trusting Enaam with field storytelling:'}
-                </p>
-              </div>
-
-              <div className="editorial-narrative-spine">
-                {cvData.clients.map((client, idx) => (
-                  <div key={idx} className="editorial-story-milestone">
-                    <div className="editorial-chrono-node" aria-hidden="true"></div>
-                    <div className="editorial-story-card">
-                      <div className="editorial-card-header">
-                        <span className="badge-tag">
-                          <i className="fas fa-shield-alt text-gold" style={{ marginInlineEnd: 6 }}></i>
-                          {currentLang === 'ar' ? 'منظمة وشريك ميداني' : 'Field Partner & Agency'}
-                        </span>
-                      </div>
-                      <h4 className="editorial-card-title">{client.name}</h4>
-                      <p className="editorial-card-desc">
-                        {currentLang === 'ar' ? client.roleAr : client.roleEn}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          {activeWing === 'manifesto' && <CVManifestoWing currentLang={currentLang} />}
+          {activeWing === 'exhibitions' && <CVExhibitionsWing currentLang={currentLang} />}
+          {activeWing === 'awards' && <CVAwardsWing currentLang={currentLang} />}
+          {activeWing === 'gear' && <CVGearWing currentLang={currentLang} />}
+          {activeWing === 'partners' && <CVPartnersWing currentLang={currentLang} />}
         </div>
       </div>
     </div>

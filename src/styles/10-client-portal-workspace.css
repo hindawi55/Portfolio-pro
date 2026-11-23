@@ -1,0 +1,487 @@
+/* ========================================================
+   CLIENT PROOFING & DELIVERY PORTAL (LUXE PRO DESIGN)
+   ======================================================== */
+.client-portal-section {
+  background: var(--bg-dark);
+  position: relative;
+  overflow: hidden;
+}
+
+.client-portal-section::after {
+  content: '';
+  position: absolute;
+  bottom: -10%;
+  right: -5%;
+  width: 450px;
+  height: 450px;
+  background: radial-gradient(circle, rgba(226, 177, 112, 0.05) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.portal-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+}
+
+/* Locked PIN Card */
+.portal-lock-card {
+  max-width: 520px;
+  margin: 0 auto;
+  background: linear-gradient(180deg, rgba(22, 26, 35, 0.95) 0%, rgba(12, 15, 21, 0.98) 100%);
+  border: 1px solid rgba(226, 177, 112, 0.3);
+  border-radius: 24px;
+  padding: 44px 36px;
+  text-align: center;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.portal-lock-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(226, 177, 112, 0.12);
+  border: 1px solid rgba(226, 177, 112, 0.35);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  margin: 0 auto 20px;
+  box-shadow: 0 0 30px rgba(226, 177, 112, 0.15);
+}
+
+.portal-lock-card h3 {
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.portal-lock-card p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  margin-bottom: 28px;
+}
+
+.portal-pin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.portal-input-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.portal-input-wrap i {
+  position: absolute;
+  top: 50%;
+  inset-inline-start: 18px;
+  transform: translateY(-50%);
+  color: var(--accent);
+  font-size: 1rem;
+}
+
+.portal-input-wrap input {
+  width: 100%;
+  padding: 16px 20px 16px 48px;
+  background: rgba(9, 11, 15, 0.85);
+  border: 1px solid rgba(226, 177, 112, 0.3);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-family: 'Cairo', sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+body[dir="rtl"] .portal-input-wrap input {
+  padding: 16px 48px 16px 20px;
+}
+
+.portal-input-wrap input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(226, 177, 112, 0.2);
+}
+
+.portal-error-msg {
+  color: #ff6b6b;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: rgba(255, 107, 107, 0.1);
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 107, 107, 0.25);
+  animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+.portal-submit-btn {
+  width: 100%;
+  justify-content: center;
+  min-height: 48px;
+  font-size: 1rem;
+}
+
+.portal-demo-bar {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.demo-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.demo-label i {
+  color: var(--accent);
+}
+
+.demo-chips {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.demo-chip {
+  background: rgba(226, 177, 112, 0.08);
+  border: 1px solid rgba(226, 177, 112, 0.25);
+  color: var(--accent-light);
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.82rem;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.25s ease;
+}
+
+.demo-chip:hover {
+  background: var(--accent);
+  color: var(--primary);
+  transform: translateY(-2px);
+}
+
+/* Unlocked Workspace */
+.portal-workspace {
+  animation: portalFadeIn 0.4s ease-out;
+}
+
+@keyframes portalFadeIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========================================================
+   PERSISTENT CLIENT SESSION RIBBON
+   ======================================================== */
+.client-active-ribbon {
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  background: linear-gradient(90deg, #12161f 0%, #1a202c 50%, #12161f 100%);
+  border-bottom: 1px solid rgba(226, 177, 112, 0.4);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  padding: 10px 24px;
+  animation: ribbonSlide 0.3s ease-out;
+}
+
+@keyframes ribbonSlide {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+.ribbon-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ribbon-client-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+
+.ribbon-pulse {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #25d366;
+  box-shadow: 0 0 10px #25d366;
+  animation: pulseDot 1.5s infinite;
+}
+
+@keyframes pulseDot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.6; }
+}
+
+.ribbon-client-info i {
+  color: var(--accent);
+}
+
+.ribbon-title strong {
+  color: var(--accent-light);
+  font-weight: 700;
+}
+
+.ribbon-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ribbon-btn {
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 20px;
+  min-height: 36px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.25s ease;
+}
+
+.ribbon-btn-mode {
+  background: rgba(226, 177, 112, 0.15);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+
+.ribbon-btn-mode:hover {
+  background: var(--accent);
+  color: var(--primary);
+}
+
+.ribbon-btn-logout {
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.35);
+  color: #ff6b6b;
+}
+
+.ribbon-btn-logout:hover {
+  background: #ff6b6b;
+  color: #fff;
+}
+
+/* ========================================================
+   ISOLATED CLIENT WORKSPACE MODE
+   ======================================================== */
+.isolated-client-view {
+  min-height: calc(100vh - 120px);
+  padding: 40px 0 80px;
+  background: radial-gradient(circle at 50% 10%, #151a24 0%, #0a0c10 80%);
+}
+
+.client-portal-section.portal-isolated-active {
+  padding-top: 10px;
+}
+
+.portal-session-banner {
+  background: linear-gradient(180deg, rgba(20, 25, 34, 0.95) 0%, rgba(12, 15, 21, 0.98) 100%);
+  border: 1px solid rgba(226, 177, 112, 0.3);
+  border-radius: 20px;
+  padding: 28px 34px;
+  margin-bottom: 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 22px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+}
+
+.session-status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.session-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: rgba(37, 211, 102, 0.12);
+  color: #25d366;
+  border: 1px solid rgba(37, 211, 102, 0.3);
+  font-weight: 600;
+}
+
+.session-pin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(226, 177, 112, 0.12);
+  color: var(--accent);
+  border: 1px solid rgba(226, 177, 112, 0.3);
+  font-weight: 600;
+}
+
+.session-info-main h3 {
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.session-meta-line {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.session-meta-line span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.session-meta-line i {
+  color: var(--accent);
+}
+
+.package-size-pill {
+  color: var(--accent-light) !important;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 2px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(226, 177, 112, 0.2);
+}
+
+.session-actions-top {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.portal-btn-sm {
+  padding: 10px 18px;
+  min-height: 44px;
+  font-size: 0.85rem;
+}
+
+.portal-btn-toggle-isolate {
+  min-height: 44px;
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  border-color: rgba(226, 177, 112, 0.3);
+}
+
+.portal-btn-logout {
+  min-height: 44px;
+  padding: 10px 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px;
+  color: #ff6b6b;
+  border-color: rgba(255, 107, 107, 0.35);
+  font-size: 0.85rem;
+}
+
+.portal-btn-logout:hover {
+  background: #ff6b6b;
+  color: #fff;
+  border-color: #ff6b6b;
+}
+
+/* Proofing Toolbar */
+.portal-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 12px 20px;
+  background: rgba(16, 20, 27, 0.85);
+  border: 1px solid rgba(226, 177, 112, 0.2);
+  border-radius: 14px;
+}
+
+.toolbar-left {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.toolbar-tab {
+  background: none;
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 20px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  transition: all 0.25s ease;
+}
+
+.toolbar-tab.active {
+  background: rgba(226, 177, 112, 0.15);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.selected-status {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.selected-status strong {
+  color: var(--accent);
+  font-size: 1.15rem;
+}
+

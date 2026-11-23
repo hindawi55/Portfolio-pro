@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { FilterCategory, Language, PhotoSeries } from '../types';
-import { photoSeriesData, getPhotoUrl } from '../data/portfolioData';
-import { translations } from '../data/translations';
+import { getPhotoUrl } from '../data/portfolioData';
+import { useSiteCMS } from '../context/SiteCMSContext';
+import { FALLBACK_IMAGE_URL } from '../utils/assets';
 
 interface PortfolioProps {
   currentLang: Language;
@@ -16,7 +17,8 @@ export const Portfolio: React.FC<PortfolioProps> = ({ currentLang, onOpenLightbo
   const [activeFilter, setActiveFilter] = useState<FilterCategory>('all');
   const [seriesActiveIndex, setSeriesActiveIndex] = useState<Record<string, number>>({});
   const [inlineExifSeriesId, setInlineExifSeriesId] = useState<string | null>(null);
-  const t = translations[currentLang];
+  const { portfolioSeries, getTranslation } = useSiteCMS();
+  const t = getTranslation(currentLang);
 
   const getActiveIndex = (seriesId: string) => seriesActiveIndex[seriesId] || 0;
 
@@ -27,7 +29,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({ currentLang, onOpenLightbo
     setSeriesActiveIndex((prev) => ({ ...prev, [seriesId]: nextIndex }));
   };
 
-  const filteredSeries = photoSeriesData.filter((series) => {
+  const filteredSeries = portfolioSeries.filter((series) => {
     if (activeFilter === 'all') return true;
     return series.category === activeFilter || series.tags.includes(activeFilter);
   });
@@ -120,7 +122,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({ currentLang, onOpenLightbo
                   onError={(e) => {
                     const target = e.currentTarget;
                     target.onerror = null;
-                    target.src = '/images/1.jpg';
+                    target.src = FALLBACK_IMAGE_URL;
                   }}
                 />
               </div>
@@ -283,7 +285,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({ currentLang, onOpenLightbo
                       onError={(e) => {
                         const target = e.currentTarget;
                         target.onerror = null;
-                        target.src = '/images/1.jpg';
+                        target.src = FALLBACK_IMAGE_URL;
                       }}
                     />
                   </div>

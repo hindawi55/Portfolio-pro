@@ -1,0 +1,454 @@
+{
+  "entities": {
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Authorized Studio OS administrator with full CMS and CRM write privileges.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 200
+        },
+        "displayName": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "role": {
+          "type": "string",
+          "enum": ["owner", "editor"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "email", "role", "createdAt"]
+    },
+    "SiteConfigDocument": {
+      "title": "SiteConfigDocument",
+      "description": "Singleton studio configuration document (theme, layout, seo, or content overrides).",
+      "type": "object",
+      "properties": {
+        "configType": {
+          "type": "string",
+          "enum": ["theme", "layout", "seo", "content"]
+        },
+        "payload": {
+          "type": "object",
+          "description": "Structured native map containing theme tokens, layout visibility/order, SEO metadata, or bilingual text overrides."
+        },
+        "updatedBy": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["configType", "payload", "updatedBy", "updatedAt"]
+    },
+    "PortfolioSeriesDoc": {
+      "title": "PortfolioSeriesDoc",
+      "description": "A curated photography series with bilingual editorial text and bounded photo entries.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "number": {
+          "type": "string",
+          "maxLength": 24
+        },
+        "order": {
+          "type": "number"
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["humanitarian", "community", "workshops", "documentary"]
+        },
+        "titleAr": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "titleEn": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "subtitleAr": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "subtitleEn": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "locationAr": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "locationEn": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "date": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "folder": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "tags": {
+          "type": "array",
+          "description": "Bounded up to 12 short strings."
+        },
+        "photos": {
+          "type": "array",
+          "description": "Bounded up to 40 photo metadata maps."
+        },
+        "updatedBy": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "number",
+        "order",
+        "visible",
+        "category",
+        "titleAr",
+        "titleEn",
+        "date",
+        "folder",
+        "photos",
+        "updatedBy",
+        "updatedAt"
+      ]
+    },
+    "CVDossierDoc": {
+      "title": "CVDossierDoc",
+      "description": "Structured bilingual Curriculum Vitae dossier covering all 5 wings.",
+      "type": "object",
+      "properties": {
+        "artistStatementAr": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "artistStatementEn": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "education": {
+          "type": "array"
+        },
+        "exhibitions": {
+          "type": "array"
+        },
+        "awards": {
+          "type": "array"
+        },
+        "gear": {
+          "type": "array"
+        },
+        "clients": {
+          "type": "array"
+        },
+        "updatedBy": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "artistStatementAr",
+        "artistStatementEn",
+        "education",
+        "exhibitions",
+        "awards",
+        "gear",
+        "clients",
+        "updatedBy",
+        "updatedAt"
+      ]
+    },
+    "ThemeBackupSnapshot": {
+      "title": "ThemeBackupSnapshot",
+      "description": "Versioned cloud snapshot of theme, layout, SEO, and content overrides for 1-click restore.",
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "note": {
+          "type": "string",
+          "maxLength": 400
+        },
+        "theme": {
+          "type": "object"
+        },
+        "layout": {
+          "type": "object"
+        },
+        "seo": {
+          "type": "object"
+        },
+        "content": {
+          "type": "object"
+        },
+        "createdBy": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["label", "theme", "layout", "seo", "content", "createdBy", "createdAt"]
+    },
+    "ClientSessionDoc": {
+      "title": "ClientSessionDoc",
+      "description": "Private PIN-keyed client delivery & proofing session.",
+      "type": "object",
+      "properties": {
+        "pin": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 32,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "clientNameAr": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "clientNameEn": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "projectTitleAr": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        },
+        "projectTitleEn": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        },
+        "date": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "statusAr": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "statusEn": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "expiryDate": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "packageSize": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "totalPhotos": {
+          "type": "number"
+        },
+        "photos": {
+          "type": "array"
+        },
+        "updatedBy": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "pin",
+        "clientNameAr",
+        "clientNameEn",
+        "projectTitleAr",
+        "projectTitleEn",
+        "date",
+        "statusAr",
+        "statusEn",
+        "expiryDate",
+        "packageSize",
+        "totalPhotos",
+        "photos",
+        "updatedBy",
+        "updatedAt"
+      ]
+    },
+    "ClientProofFeedback": {
+      "title": "ClientProofFeedback",
+      "description": "Persisted client favorite toggle and retouch note for a photo in a client session.",
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 32,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "photoId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "isFavorite": {
+          "type": "boolean"
+        },
+        "note": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["sessionId", "photoId", "isFavorite", "note", "updatedAt"]
+    },
+    "BookingInquiryDoc": {
+      "title": "BookingInquiryDoc",
+      "description": "CRM lead record submitted through the booking form (strict PII isolation).",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "organization": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 200
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "serviceType": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "eventDate": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "location": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "budget": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "message": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 2500
+        },
+        "status": {
+          "type": "string",
+          "enum": ["new", "reviewed", "booked", "archived"]
+        },
+        "adminNotes": {
+          "type": "string",
+          "maxLength": 1500
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["name", "email", "serviceType", "message", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/admins/{userId}": {
+      "schema": { "$ref": "#/entities/AdminUser" },
+      "description": "Trusted list of Studio OS administrator accounts."
+    },
+    "/site_config/{configId}": {
+      "schema": { "$ref": "#/entities/SiteConfigDocument" },
+      "description": "Publicly readable, admin-writable singleton configuration documents (theme, layout, seo, content)."
+    },
+    "/portfolio_series/{seriesId}": {
+      "schema": { "$ref": "#/entities/PortfolioSeriesDoc" },
+      "description": "Publicly readable, admin-writable curated photo series."
+    },
+    "/cv_dossier/{docId}": {
+      "schema": { "$ref": "#/entities/CVDossierDoc" },
+      "description": "Publicly readable, admin-writable 5-wing CV dossier."
+    },
+    "/theme_backups/{backupId}": {
+      "schema": { "$ref": "#/entities/ThemeBackupSnapshot" },
+      "description": "Admin-only versioned cloud snapshots for template backup and restore."
+    },
+    "/client_sessions/{sessionId}": {
+      "schema": { "$ref": "#/entities/ClientSessionDoc" },
+      "description": "Private PIN-keyed client delivery sessions (get by secret PIN, list/write admin only)."
+    },
+    "/client_sessions/{sessionId}/proof_feedback/{photoId}": {
+      "schema": { "$ref": "#/entities/ClientProofFeedback" },
+      "description": "Persisted client favorites and retouch notes scoped to an existing parent client session."
+    },
+    "/booking_inquiries/{inquiryId}": {
+      "schema": { "$ref": "#/entities/BookingInquiryDoc" },
+      "description": "Booking & commission leads inbox (public create with strict validation; PII reads/updates admin only)."
+    }
+  }
+}

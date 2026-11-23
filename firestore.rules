@@ -1,0 +1,316 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pillar 1 / Global Safety Net: Default-deny everything not explicitly matched
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ========================================================
+    // HARDENED GLOBAL PRIMITIVES
+    // ========================================================
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isBootstrappedOwner() {
+      return isVerifiedUser() && request.auth.token.email == 'mohsentiben@gmail.com';
+    }
+
+    function isAdmin() {
+      return isBootstrappedOwner() ||
+        (isVerifiedUser() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+    }
+
+    // ========================================================
+    // VALIDATION BLUEPRINTS (ANTI-UPDATE-GAP)
+    // ========================================================
+    function isValidAdminUser(data, docId) {
+      return data.keys().hasAll(['uid', 'email', 'role', 'createdAt']) &&
+        data.keys().hasOnly(['uid', 'email', 'displayName', 'role', 'createdAt']) &&
+        data.uid is string && data.uid == docId && isValidId(data.uid) &&
+        data.email is string && data.email.size() >= 5 && data.email.size() <= 200 &&
+        (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 120)) &&
+        data.role in ['owner', 'editor'] &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidSiteConfig(data, configId) {
+      return configId in ['theme', 'layout', 'seo', 'content'] &&
+        data.keys().hasAll(['configType', 'payload', 'updatedBy', 'updatedAt']) &&
+        data.keys().hasOnly(['configType', 'payload', 'updatedBy', 'updatedAt']) &&
+        data.configType == configId &&
+        data.payload is map && data.payload.size() <= 60 &&
+        data.updatedBy is string && data.updatedBy == request.auth.uid && isValidId(data.updatedBy) &&
+        data.updatedAt == request.time;
+    }
+
+    function isValidPortfolioSeries(data, seriesId) {
+      return data.keys().hasAll([
+          'id', 'number', 'order', 'visible', 'category',
+          'titleAr', 'titleEn', 'date', 'folder', 'photos',
+          'updatedBy', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'number', 'order', 'visible', 'category',
+          'titleAr', 'titleEn', 'subtitleAr', 'subtitleEn',
+          'locationAr', 'locationEn', 'date', 'folder',
+          'tags', 'photos', 'updatedBy', 'updatedAt'
+        ]) &&
+        data.id is string && data.id == seriesId && isValidId(data.id) &&
+        data.number is string && data.number.size() <= 24 &&
+        data.order is number && data.order >= 0 && data.order <= 999 &&
+        data.visible is bool &&
+        data.category in ['humanitarian', 'community', 'workshops', 'documentary'] &&
+        data.titleAr is string && data.titleAr.size() >= 1 && data.titleAr.size() <= 200 &&
+        data.titleEn is string && data.titleEn.size() >= 1 && data.titleEn.size() <= 200 &&
+        (!('subtitleAr' in data) || (data.subtitleAr is string && data.subtitleAr.size() <= 300)) &&
+        (!('subtitleEn' in data) || (data.subtitleEn is string && data.subtitleEn.size() <= 300)) &&
+        (!('locationAr' in data) || (data.locationAr is string && data.locationAr.size() <= 160)) &&
+        (!('locationEn' in data) || (data.locationEn is string && data.locationEn.size() <= 160)) &&
+        data.date is string && data.date.size() <= 64 &&
+        data.folder is string && data.folder.size() <= 300 &&
+        (!('tags' in data) || (data.tags is list && data.tags.size() <= 12 && (data.tags.size() == 0 || data.tags[0] is string))) &&
+        data.photos is list && data.photos.size() <= 40 && (data.photos.size() == 0 || data.photos[0] is map) &&
+        data.updatedBy is string && data.updatedBy == request.auth.uid && isValidId(data.updatedBy) &&
+        data.updatedAt == request.time;
+    }
+
+    function isValidCVDossier(data) {
+      return data.keys().hasAll([
+          'artistStatementAr', 'artistStatementEn',
+          'education', 'exhibitions', 'awards', 'gear', 'clients',
+          'updatedBy', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'artistStatementAr', 'artistStatementEn',
+          'education', 'exhibitions', 'awards', 'gear', 'clients',
+          'updatedBy', 'updatedAt'
+        ]) &&
+        data.artistStatementAr is string && data.artistStatementAr.size() <= 4000 &&
+        data.artistStatementEn is string && data.artistStatementEn.size() <= 4000 &&
+        data.education is list && data.education.size() <= 30 && (data.education.size() == 0 || data.education[0] is map) &&
+        data.exhibitions is list && data.exhibitions.size() <= 50 && (data.exhibitions.size() == 0 || data.exhibitions[0] is map) &&
+        data.awards is list && data.awards.size() <= 50 && (data.awards.size() == 0 || data.awards[0] is map) &&
+        data.gear is list && data.gear.size() <= 20 && (data.gear.size() == 0 || data.gear[0] is map) &&
+        data.clients is list && data.clients.size() <= 60 && (data.clients.size() == 0 || data.clients[0] is map) &&
+        data.updatedBy is string && data.updatedBy == request.auth.uid && isValidId(data.updatedBy) &&
+        data.updatedAt == request.time;
+    }
+
+    function isValidThemeBackup(data) {
+      return data.keys().hasAll(['label', 'theme', 'layout', 'seo', 'content', 'createdBy', 'createdAt']) &&
+        data.keys().hasOnly(['label', 'note', 'theme', 'layout', 'seo', 'content', 'createdBy', 'createdAt']) &&
+        data.label is string && data.label.size() >= 1 && data.label.size() <= 120 &&
+        (!('note' in data) || (data.note is string && data.note.size() <= 400)) &&
+        data.theme is map && data.theme.size() <= 20 &&
+        data.layout is map && data.layout.size() <= 20 &&
+        data.seo is map && data.seo.size() <= 20 &&
+        data.content is map && data.content.size() <= 40 &&
+        data.createdBy is string && data.createdBy == request.auth.uid && isValidId(data.createdBy) &&
+        data.createdAt == request.time;
+    }
+
+    function isValidClientSession(data, sessionId) {
+      return data.keys().hasAll([
+          'pin', 'clientNameAr', 'clientNameEn', 'projectTitleAr', 'projectTitleEn',
+          'date', 'statusAr', 'statusEn', 'expiryDate', 'packageSize',
+          'totalPhotos', 'photos', 'updatedBy', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'pin', 'clientNameAr', 'clientNameEn', 'projectTitleAr', 'projectTitleEn',
+          'date', 'statusAr', 'statusEn', 'expiryDate', 'packageSize',
+          'totalPhotos', 'downloadUrl', 'photos', 'updatedBy', 'updatedAt'
+        ]) &&
+        data.pin is string && data.pin == sessionId && data.pin.size() >= 3 && data.pin.size() <= 32 && isValidId(data.pin) &&
+        data.clientNameAr is string && data.clientNameAr.size() >= 1 && data.clientNameAr.size() <= 200 &&
+        data.clientNameEn is string && data.clientNameEn.size() >= 1 && data.clientNameEn.size() <= 200 &&
+        data.projectTitleAr is string && data.projectTitleAr.size() >= 1 && data.projectTitleAr.size() <= 240 &&
+        data.projectTitleEn is string && data.projectTitleEn.size() >= 1 && data.projectTitleEn.size() <= 240 &&
+        data.date is string && data.date.size() <= 64 &&
+        data.statusAr is string && data.statusAr.size() <= 120 &&
+        data.statusEn is string && data.statusEn.size() <= 120 &&
+        data.expiryDate is string && data.expiryDate.size() <= 32 &&
+        data.packageSize is string && data.packageSize.size() <= 80 &&
+        data.totalPhotos is number && data.totalPhotos >= 0 && data.totalPhotos <= 200 &&
+        (!('downloadUrl' in data) || (data.downloadUrl is string && data.downloadUrl.size() <= 500)) &&
+        data.photos is list && data.photos.size() <= 100 && (data.photos.size() == 0 || data.photos[0] is map) &&
+        data.updatedBy is string && data.updatedBy == request.auth.uid && isValidId(data.updatedBy) &&
+        data.updatedAt == request.time;
+    }
+
+    function isValidProofFeedback(data, sessionId, photoId) {
+      return data.keys().hasAll(['sessionId', 'photoId', 'isFavorite', 'note', 'updatedAt']) &&
+        data.keys().hasOnly(['sessionId', 'photoId', 'isFavorite', 'note', 'updatedAt']) &&
+        data.sessionId is string && data.sessionId == sessionId && isValidId(data.sessionId) &&
+        data.photoId is string && data.photoId == photoId && isValidId(data.photoId) &&
+        data.isFavorite is bool &&
+        data.note is string && data.note.size() <= 1000 &&
+        data.updatedAt == request.time;
+    }
+
+    function isValidBookingInquiryCreate(data) {
+      return data.keys().hasAll(['name', 'email', 'serviceType', 'message', 'status', 'createdAt']) &&
+        data.keys().hasOnly([
+          'name', 'organization', 'email', 'phone', 'serviceType',
+          'eventDate', 'location', 'budget', 'message', 'status', 'createdAt'
+        ]) &&
+        data.name is string && data.name.size() >= 2 && data.name.size() <= 120 &&
+        (!('organization' in data) || (data.organization is string && data.organization.size() <= 160)) &&
+        data.email is string && data.email.size() >= 5 && data.email.size() <= 200 &&
+        (!('phone' in data) || (data.phone is string && data.phone.size() <= 40)) &&
+        data.serviceType is string && data.serviceType.size() >= 1 && data.serviceType.size() <= 120 &&
+        (!('eventDate' in data) || (data.eventDate is string && data.eventDate.size() <= 64)) &&
+        (!('location' in data) || (data.location is string && data.location.size() <= 160)) &&
+        (!('budget' in data) || (data.budget is string && data.budget.size() <= 80)) &&
+        data.message is string && data.message.size() >= 5 && data.message.size() <= 2500 &&
+        data.status == 'new' &&
+        data.createdAt == request.time;
+    }
+
+    function isValidBookingInquiryAdminUpdate(data) {
+      return data.keys().hasAll(['name', 'email', 'serviceType', 'message', 'status', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly([
+          'name', 'organization', 'email', 'phone', 'serviceType',
+          'eventDate', 'location', 'budget', 'message', 'status',
+          'adminNotes', 'createdAt', 'updatedAt'
+        ]) &&
+        data.status in ['new', 'reviewed', 'booked', 'archived'] &&
+        (!('adminNotes' in data) || (data.adminNotes is string && data.adminNotes.size() <= 1500)) &&
+        data.updatedAt == request.time;
+    }
+
+    // ========================================================
+    // COLLECTION RULES (FINAL HARDENED PRODUCTION SET)
+    // ========================================================
+
+    // 1. Admins Registry (Strict Zero Self-Escalation)
+    match /admins/{userId} {
+      allow get: if isValidId(userId) && isVerifiedUser() && (request.auth.uid == userId || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isValidId(userId) && isValidAdminUser(incoming(), userId) && incoming().createdAt == request.time && isAdmin();
+      allow update: if isValidId(userId) && isValidAdminUser(incoming(), userId) &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().uid == existing().uid &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'role']) &&
+        isAdmin();
+      allow delete: if isValidId(userId) && isAdmin() && userId != request.auth.uid;
+    }
+
+    // 2. Site Configuration Singletons (theme, layout, seo, content)
+    match /site_config/{configId} {
+      allow get: if isValidId(configId) && configId in ['theme', 'layout', 'seo', 'content'];
+      allow list: if isAdmin();
+      allow create: if isValidId(configId) && isValidSiteConfig(incoming(), configId) && isAdmin();
+      allow update: if isValidId(configId) && isValidSiteConfig(incoming(), configId) &&
+        incoming().configType == existing().configType &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['payload', 'updatedBy', 'updatedAt']) &&
+        isAdmin();
+      allow delete: if isValidId(configId) && isAdmin();
+    }
+
+    // 3. Portfolio Series (Visible Public Gallery Read, Hidden Drafts Admin-Only)
+    match /portfolio_series/{seriesId} {
+      allow get: if isValidId(seriesId) && (existing().visible == true || isAdmin());
+      allow list: if resource.data.visible == true || isAdmin();
+      allow create: if isValidId(seriesId) && isValidPortfolioSeries(incoming(), seriesId) && isAdmin();
+      allow update: if isValidId(seriesId) && isValidPortfolioSeries(incoming(), seriesId) &&
+        incoming().id == existing().id &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'number', 'order', 'visible', 'category', 'titleAr', 'titleEn',
+          'subtitleAr', 'subtitleEn', 'locationAr', 'locationEn',
+          'date', 'folder', 'tags', 'photos', 'updatedBy', 'updatedAt'
+        ]) &&
+        isAdmin();
+      allow delete: if isValidId(seriesId) && isAdmin();
+    }
+
+    // 4. CV Dossier (Public Read, Admin Write)
+    match /cv_dossier/{docId} {
+      allow get: if isValidId(docId) && docId == 'main';
+      allow list: if isAdmin();
+      allow create: if isValidId(docId) && docId == 'main' && isValidCVDossier(incoming()) && isAdmin();
+      allow update: if isValidId(docId) && docId == 'main' && isValidCVDossier(incoming()) &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'artistStatementAr', 'artistStatementEn', 'education', 'exhibitions',
+          'awards', 'gear', 'clients', 'updatedBy', 'updatedAt'
+        ]) &&
+        isAdmin();
+      allow delete: if isValidId(docId) && isAdmin();
+    }
+
+    // 5. Cloud Theme & Template Backups (Admin Only — Immutable Snapshots)
+    match /theme_backups/{backupId} {
+      allow get: if isValidId(backupId) && isAdmin();
+      allow list: if isAdmin();
+      allow create: if isValidId(backupId) && isValidThemeBackup(incoming()) && isAdmin();
+      allow update: if false;
+      allow delete: if isValidId(backupId) && isAdmin();
+    }
+
+    // 6. Client Proofing Sessions (Secret PIN get; Admin list & write)
+    match /client_sessions/{sessionId} {
+      allow get: if isValidId(sessionId);
+      allow list: if isAdmin();
+      allow create: if isValidId(sessionId) && isValidClientSession(incoming(), sessionId) && isAdmin();
+      allow update: if isValidId(sessionId) && isValidClientSession(incoming(), sessionId) &&
+        incoming().pin == existing().pin &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'clientNameAr', 'clientNameEn', 'projectTitleAr', 'projectTitleEn',
+          'date', 'statusAr', 'statusEn', 'expiryDate', 'packageSize',
+          'totalPhotos', 'downloadUrl', 'photos', 'updatedBy', 'updatedAt'
+        ]) &&
+        isAdmin();
+      allow delete: if isValidId(sessionId) && isAdmin();
+
+      // 6b. Client Proofing Feedback Subcollection (Master Gate + Scoped List)
+      match /proof_feedback/{photoId} {
+        allow get: if isValidId(sessionId) && isValidId(photoId) &&
+          exists(/databases/$(database)/documents/client_sessions/$(sessionId));
+        allow list: if resource.data.sessionId == sessionId;
+        allow create: if isValidId(sessionId) && isValidId(photoId) &&
+          isValidProofFeedback(incoming(), sessionId, photoId) &&
+          exists(/databases/$(database)/documents/client_sessions/$(sessionId));
+        allow update: if isValidId(sessionId) && isValidId(photoId) &&
+          isValidProofFeedback(incoming(), sessionId, photoId) &&
+          incoming().sessionId == existing().sessionId &&
+          incoming().photoId == existing().photoId &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['isFavorite', 'note', 'updatedAt']) &&
+          exists(/databases/$(database)/documents/client_sessions/$(sessionId));
+        allow delete: if isValidId(sessionId) && isValidId(photoId) && isAdmin();
+      }
+    }
+
+    // 7. Booking Inquiries CRM Inbox (Public Create; Strict Admin-Only PII Read/Update/Delete)
+    match /booking_inquiries/{inquiryId} {
+      allow get: if isValidId(inquiryId) && isAdmin();
+      allow list: if isAdmin();
+      allow create: if isValidId(inquiryId) && isValidBookingInquiryCreate(incoming());
+      allow update: if isValidId(inquiryId) && isValidBookingInquiryAdminUpdate(incoming()) &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().name == existing().name &&
+        incoming().email == existing().email &&
+        incoming().message == existing().message &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['status', 'adminNotes', 'updatedAt']) &&
+        isAdmin();
+      allow delete: if isValidId(inquiryId) && isAdmin();
+    }
+  }
+}

@@ -1,0 +1,51 @@
+/* ========================================================
+   UNIFIED DESIGN TOKENS ENGINE (COLORS, FLUID TYPOGRAPHY, SAFE RHYTHM)
+   Single source of truth for runtime Theme Studio & Luxe Pro standards.
+   ======================================================== */
+
+:root {
+  /* 1. Harmonized 60-30-10 Color Tokens */
+  --primary: #0c0e12;
+  --secondary: #161920;
+  --bg-dark: #090a0d;
+  --bg-card: #12151b;
+  --bg-elevated: #191d26;
+  --accent: #e2b170;
+  --accent-light: #f5cf96;
+  --accent-rgb: 226, 177, 112;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #8a95a8;
+  --border: #252b37;
+  --gradient-1: linear-gradient(135deg, #e2b170 0%, #f7d6a5 50%, #d49c55 100%);
+  --gradient-2: linear-gradient(180deg, rgba(var(--accent-rgb), 0.08) 0%, transparent 100%);
+  --shadow-accent: 0 8px 30px rgba(var(--accent-rgb), 0.22);
+  --shadow-card: 0 16px 40px rgba(0, 0, 0, 0.5);
+
+  /* 2. Harmonized Bilingual Typography Tokens */
+  --font-display-en: 'Bebas Neue', 'Inter', sans-serif;
+  --font-display-ar: 'Cairo', 'IBM Plex Sans Arabic', sans-serif;
+  --font-body-en: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body-ar: 'Cairo', 'IBM Plex Sans Arabic', sans-serif;
+
+  /* 3. Universal Fluid Typography Scale (clamp across 320px -> 1440px+) */
+  --text-hero: clamp(2.25rem, 6.2vw, 5.4rem);
+  --text-section: clamp(1.85rem, 4.6vw, 3.85rem);
+  --text-h2: clamp(1.38rem, 2.7vw, 2.1rem);
+  --text-h3: clamp(1.12rem, 2.05vw, 1.45rem);
+  --text-h4: clamp(1rem, 1.6vw, 1.2rem);
+  --text-body-lg: clamp(1rem, 1.3vw, 1.14rem);
+  --text-body: clamp(0.95rem, 1.15vw, 1.04rem);
+  --text-caption: clamp(0.84rem, 1vw, 0.92rem);
+  --text-micro: clamp(0.75rem, 0.88vw, 0.82rem);
+
+  /* 4. Safe Vertical Rhythm & Diacritic-Safe Line Heights */
+  --leading-ar: 1.85;
+  --leading-en: 1.68;
+  --leading-heading-ar: 1.38;
+  --leading-heading-en: 1.16;
+  --space-heading-body: clamp(0.9rem, 1.8vw, 1.25rem);
+  --space-paragraph-gap: clamp(1.05rem, 2vw, 1.4rem);
+  --space-card-padding: clamp(1.25rem, 2.8vw, 1.85rem);
+  --space-section-block: clamp(4rem, 7.5vw, 6.5rem);
+}

@@ -1,13 +1,14 @@
 import React from 'react';
 import { Language } from '../types';
-import { translations } from '../data/translations';
+import { useSiteCMS } from '../context/SiteCMSContext';
 
 interface HeroProps {
   currentLang: Language;
 }
 
 export const Hero: React.FC<HeroProps> = ({ currentLang }) => {
-  const t = translations[currentLang];
+  const { getTranslation } = useSiteCMS();
+  const t = getTranslation(currentLang);
 
   const scrollTo = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();

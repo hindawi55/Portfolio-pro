@@ -1,27 +1,34 @@
 import React from 'react';
 import { Language } from '../types';
-import { translations } from '../data/translations';
+import { useSiteCMS } from '../context/SiteCMSContext';
 
 interface FooterProps {
   currentLang: Language;
   onOpenClientPortal?: () => void;
+  onOpenAdminStudio?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ currentLang, onOpenClientPortal }) => {
-  const t = translations[currentLang];
+export const Footer: React.FC<FooterProps> = ({
+  currentLang,
+  onOpenClientPortal,
+  onOpenAdminStudio,
+}) => {
+  const { layout, seo, getTranslation } = useSiteCMS();
+  const t = getTranslation(currentLang);
+
+  const brandText = currentLang === 'ar' ? layout.brandNameAr : layout.brandNameEn;
+  const brandParts = brandText.trim().split(/\s+/);
+  const firstWord = brandParts[0] || (currentLang === 'ar' ? 'إنعام' : 'ENAAM');
+  const restWords = brandParts.slice(1).join(' ');
 
   return (
     <footer className="footer">
       <div className="footer-logo">
-        {currentLang === 'ar' ? (
-          <>إنعام <span>عثمان</span></>
-        ) : (
-          <>ENAAM <span>OSMAN</span></>
-        )}
+        {firstWord} {restWords && <span>{restWords}</span>}
       </div>
       <div className="footer-social">
         <a
-          href="https://www.instagram.com/enaam_creation?igsh=azVxMWZveDJlOTFz"
+          href={seo.instagramUrl || 'https://www.instagram.com/enaam_creation?igsh=azVxMWZveDJlOTFz'}
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Instagram"
@@ -37,28 +44,52 @@ export const Footer: React.FC<FooterProps> = ({ currentLang, onOpenClientPortal 
           <i className="fab fa-facebook-f"></i>
         </a>
         <a
-          href="https://www.linkedin.com/in/enaam-ali-6a482a306?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app"
+          href={
+            seo.linkedinUrl ||
+            'https://www.linkedin.com/in/enaam-ali-6a482a306?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app'
+          }
           target="_blank"
           rel="noopener noreferrer"
           aria-label="LinkedIn"
         >
           <i className="fab fa-linkedin-in"></i>
         </a>
-        <a href="mailto:alienaam634@gmail.com" aria-label="Email">
+        <a href={`mailto:${seo.contactEmail || 'alienaam634@gmail.com'}`} aria-label="Email">
           <i className="fas fa-envelope"></i>
         </a>
       </div>
 
-      <div className="footer-utility-link-row">
-        <button
-          type="button"
-          onClick={onOpenClientPortal}
-          className="footer-client-link"
-          style={{ background: 'none', border: 'none', cursor: 'pointer', font: 'inherit' }}
-        >
-          <i className="fas fa-shield-alt"></i>
-          <span>{currentLang === 'ar' ? 'بوابة تسليم العملاء (Client Area)' : 'Client Delivery Access'}</span>
-        </button>
+      <div
+        className="footer-utility-link-row"
+        style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '16px' }}
+      >
+        {layout.showClientPortalButton && (
+          <button
+            type="button"
+            onClick={onOpenClientPortal}
+            className="footer-client-link"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', font: 'inherit' }}
+          >
+            <i className="fas fa-shield-alt"></i>
+            <span>
+              {currentLang === 'ar' ? 'بوابة تسليم العملاء (Client Area)' : 'Client Delivery Access'}
+            </span>
+          </button>
+        )}
+
+        {onOpenAdminStudio && (
+          <button
+            type="button"
+            onClick={onOpenAdminStudio}
+            className="footer-client-link"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', font: 'inherit' }}
+          >
+            <i className="fas fa-sliders-h"></i>
+            <span>
+              {currentLang === 'ar' ? 'لوحة التحكم (Studio OS)' : 'Studio Admin OS'}
+            </span>
+          </button>
+        )}
       </div>
 
       <p className="footer-copy">{t.footer_copy}</p>

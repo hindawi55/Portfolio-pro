@@ -1,0 +1,1235 @@
+/* ========================================================
+   HERO & ABOUT SECTION (SPATIAL PRECISION + EDITORIAL VIEWFINDER FRAME)
+   100% Fluid clamp() Scaling, Logical Properties & GPU-Only Motion
+   ======================================================== */
+
+/* Hero */
+.hero {
+  min-height: clamp(500px, 78svh, 760px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1.75rem, 4vh, 3rem);
+  position: relative;
+  overflow: hidden;
+  padding-block-start: clamp(5.75rem, 10vh, 7.5rem);
+  padding-block-end: clamp(2.25rem, 4.5vh, 3.5rem);
+  padding-inline: clamp(1.25rem, 5vw, 3.75rem);
+  background: var(--bg-dark);
+}
+
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.hero-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at 50% 42%,
+    rgba(var(--accent-rgb), 0.085) 0%,
+    transparent 68%
+  );
+  z-index: 1;
+}
+
+.hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgba(var(--accent-rgb), 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--accent-rgb), 0.028) 1px, transparent 1px);
+  background-size: 60px 60px;
+  z-index: 0;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 820px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hero-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-block: 7px;
+  padding-inline: clamp(14px, 2.5vw, 22px);
+  border: 1px solid rgba(var(--accent-rgb), 0.42);
+  border-radius: 4px;
+  background: rgba(var(--accent-rgb), 0.06);
+  color: var(--accent);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-block-end: clamp(1rem, 2.2vw, 1.55rem);
+  animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.hero-title {
+  font-family: var(--font-display-en);
+  font-size: var(--text-hero);
+  font-weight: 400;
+  line-height: var(--leading-heading-en);
+  margin-block: 0 var(--space-heading-body);
+  animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.12s forwards;
+  letter-spacing: clamp(1.5px, 0.35vw, 4px);
+  word-break: keep-all;
+  text-wrap: balance;
+}
+
+.hero-title .highlight {
+  background: var(--gradient-1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-subtitle {
+  font-size: var(--text-body-lg);
+  color: var(--text-secondary);
+  max-width: 60ch;
+  margin-inline: auto;
+  margin-block: 0 clamp(1.75rem, 3.2vw, 2.4rem);
+  animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.24s forwards;
+}
+
+.hero-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(0.75rem, 1.8vw, 1.25rem);
+  justify-content: center;
+  width: 100%;
+  animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.36s forwards;
+}
+
+.btn {
+  padding-block: 13px;
+  padding-inline: clamp(22px, 3.5vw, 36px);
+  min-height: 46px;
+  font-family: var(--font-body-ar);
+  font-size: var(--text-caption);
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease,
+    border-color 0.2s ease, color 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btn-primary {
+  background: var(--gradient-1);
+  color: var(--primary);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-accent);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+.btn-outline:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.hero-scroll {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-block-start: clamp(0.25rem, 1vh, 0.75rem);
+  animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.48s forwards;
+}
+
+.hero-scroll span {
+  font-size: 0.72rem;
+  letter-spacing: 2.5px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.scroll-line {
+  width: 1px;
+  height: 36px;
+  background: linear-gradient(to bottom, var(--accent), transparent);
+  transform-origin: top center;
+  animation: scrollPulse 2.2s ease-in-out infinite;
+}
+
+@keyframes scrollPulse {
+  0%,
+  100% {
+    opacity: 0.32;
+    transform: scaleY(0.7);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Global Sections Rhythm */
+.section {
+  padding-block: var(--space-section-block);
+  padding-inline: clamp(1.25rem, 5vw, 3.75rem);
+  position: relative;
+}
+
+.section-header {
+  text-align: center;
+  margin-block-end: clamp(2.25rem, 5vw, 4rem);
+}
+
+.section-label {
+  display: inline-block;
+  color: var(--accent);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  letter-spacing: 3.5px;
+  text-transform: uppercase;
+  margin-block-end: clamp(0.55rem, 1.2vw, 0.85rem);
+  position: relative;
+}
+
+.section-label::before,
+.section-label::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: clamp(22px, 3vw, 40px);
+  height: 1px;
+  background: var(--accent);
+  opacity: 0.32;
+}
+
+.section-label::before {
+  inset-inline-end: calc(100% + 14px);
+}
+
+.section-label::after {
+  inset-inline-start: calc(100% + 14px);
+}
+
+.section-title {
+  font-family: var(--font-display-en);
+  font-size: var(--text-section);
+  font-weight: 400;
+  margin-block: 0 var(--space-heading-body);
+  letter-spacing: clamp(1px, 0.3vw, 3.5px);
+  text-wrap: balance;
+}
+
+.section-desc {
+  color: var(--text-secondary);
+  max-width: 64ch;
+  margin-inline: auto;
+  margin-block: 0;
+  font-size: var(--text-body);
+}
+
+/* ========================================================
+   ABOUT SECTION & EDITORIAL VIEWFINDER ARCHIVAL PORTRAIT FRAME
+   ======================================================== */
+.about {
+  background: var(--bg-card);
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: clamp(2.5rem, 5.5vw, 5.25rem);
+  align-items: center;
+  max-width: 1240px;
+  margin-inline: auto;
+}
+
+.vf-stage {
+  --vf-scroll-plate: 0px;
+  --vf-scroll-print: 0px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-block: clamp(0.5rem, 1.5vw, 1.25rem);
+  padding-inline: clamp(0.25rem, 1vw, 0.75rem);
+  isolation: isolate;
+}
+
+/* Frameless Architectural Monograph Container (Zero Card-within-a-Card, Zero Banding Glow) */
+.vf-monograph {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  width: 100%;
+  max-width: 416px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Balanced Geometric Mount: Perfectly centered on Mobile & Desktop */
+.vf-canvas-mount {
+  position: relative;
+  width: calc(100% - 14px);
+  margin-inline: auto;
+  margin-block-end: 12px;
+}
+
+/* Offset Architectural Brass Hairline Frame with Scroll-Linked Depth Parallax */
+.vf-offset-plate {
+  position: absolute;
+  inset-block-start: 11px;
+  inset-block-end: -11px;
+  inset-inline-start: 11px;
+  inset-inline-end: -11px;
+  border-radius: 4px;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(var(--accent-rgb), 0.44) 0%,
+    rgba(var(--accent-rgb), 0.1) 52%,
+    rgba(var(--accent-rgb), 0.36) 100%
+  );
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+  transform: translate3d(0, var(--vf-scroll-plate), 0);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+  will-change: transform;
+}
+
+.vf-offset-plate::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: 3px;
+  background: var(--bg-card);
+  z-index: 1;
+}
+
+/* Whisper-quiet metallic light sweep confined strictly to the 1px architectural hairline */
+.vf-plate-glint {
+  position: absolute;
+  inset: -45%;
+  z-index: 0;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 305deg,
+    rgba(var(--accent-rgb), 0.92) 338deg,
+    rgba(255, 255, 255, 0.65) 350deg,
+    transparent 360deg
+  );
+  animation: vfHairlineSweep 11s linear infinite;
+  will-change: transform;
+}
+
+@keyframes vfHairlineSweep {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.vf-monograph:hover .vf-offset-plate,
+.vf-monograph.is-locked .vf-offset-plate {
+  transform: translate3d(-4px, calc(var(--vf-scroll-plate) - 4px), 0);
+}
+
+body[dir='rtl'] .vf-monograph:hover .vf-offset-plate,
+body[dir='rtl'] .vf-monograph.is-locked .vf-offset-plate {
+  transform: translate3d(4px, calc(var(--vf-scroll-plate) - 4px), 0);
+}
+
+/* Edge-to-Edge 4:5 Interactive Photographic Canvas */
+.vf-canvas {
+  --vf-rx: 0deg;
+  --vf-ry: 0deg;
+  --vf-gx: 50%;
+  --vf-gy: 35%;
+  --vf-focus-y: 38%;
+  --vf-zoom: 1.06;
+  --vf-zoom-hover: 1.095;
+  --vf-zoom-locked: 1.155;
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #101218;
+  cursor: pointer;
+  outline: none;
+  box-shadow:
+    0 24px 56px rgba(0, 0, 0, 0.56),
+    0 0 0 1px rgba(var(--accent-rgb), 0.24);
+  transform: translate3d(0, var(--vf-scroll-print), 0) perspective(1000px)
+    rotateX(var(--vf-rx)) rotateY(var(--vf-ry));
+  transition:
+    transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.28s ease;
+  will-change: transform;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.vf-canvas:hover,
+.vf-canvas:focus-visible,
+.vf-monograph.is-locked .vf-canvas {
+  box-shadow:
+    0 32px 72px rgba(0, 0, 0, 0.72),
+    0 0 0 1px rgba(var(--accent-rgb), 0.58);
+}
+
+.vf-canvas:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
+/* Calibrated Golden-Ratio Editorial Framing (Eyes at Upper Third, Zero Forehead Clip) */
+.vf-photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% var(--vf-focus-y);
+  transform-origin: 50% 30%;
+  display: block;
+  transform: scale(var(--vf-zoom));
+  filter: contrast(106%) saturate(93%) brightness(98%);
+  transition:
+    transform 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, filter;
+}
+
+.vf-canvas:hover .vf-photo-img,
+.vf-canvas:focus-visible .vf-photo-img {
+  transform: scale(var(--vf-zoom-hover));
+  filter: contrast(109%) saturate(96%) brightness(100%);
+}
+
+/* True Optical Push-in & Subject Clarity Boost when Focus Lock is Active */
+.vf-monograph.is-locked .vf-photo-img {
+  transform: scale(var(--vf-zoom-locked));
+  filter: contrast(114%) saturate(102%) brightness(102%);
+}
+
+/* Leica Monochrom Silver-Gelatin Documentary B&W Film Mode */
+.vf-monograph.is-mono .vf-photo-img {
+  filter: grayscale(100%) contrast(120%) brightness(100%);
+}
+
+.vf-monograph.is-mono .vf-canvas:hover .vf-photo-img,
+.vf-monograph.is-mono .vf-canvas:focus-visible .vf-photo-img {
+  filter: grayscale(100%) contrast(124%) brightness(102%);
+}
+
+.vf-monograph.is-mono.is-locked .vf-photo-img {
+  transform: scale(var(--vf-zoom-locked));
+  filter: grayscale(100%) contrast(130%) brightness(104%);
+}
+
+/* One-Shot Living Darkroom Reveal Curtain (B&W Develops into Color once on first sight) */
+.vf-darkroom-curtain {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  overflow: hidden;
+  animation: vfCurtainWipe 1.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+body[dir='rtl'] .vf-darkroom-curtain {
+  animation-name: vfCurtainWipeRtl;
+}
+
+.vf-curtain-mono-img {
+  filter: grayscale(100%) contrast(122%) brightness(100%) !important;
+}
+
+/* Full-width GPU-composited carrier so 100% translate matches the exact wipe edge on any screen size */
+.vf-curtain-beam {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  animation: vfBeamSweep 1.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  will-change: transform, opacity;
+}
+
+body[dir='rtl'] .vf-curtain-beam {
+  animation-name: vfBeamSweepRtl;
+}
+
+.vf-curtain-beam::after {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(var(--accent-rgb), 0.92) 25%,
+    rgba(255, 255, 255, 0.96) 50%,
+    rgba(var(--accent-rgb), 0.92) 75%,
+    transparent 100%
+  );
+  box-shadow: 0 0 18px rgba(var(--accent-rgb), 0.78);
+}
+
+@keyframes vfCurtainWipe {
+  0%,
+  18% {
+    clip-path: inset(0 0 0 0);
+  }
+  100% {
+    clip-path: inset(0 0 0 100%);
+  }
+}
+
+@keyframes vfCurtainWipeRtl {
+  0%,
+  18% {
+    clip-path: inset(0 0 0 0);
+  }
+  100% {
+    clip-path: inset(0 100% 0 0);
+  }
+}
+
+@keyframes vfBeamSweep {
+  0% {
+    transform: translateX(0%);
+    opacity: 0;
+  }
+  18% {
+    transform: translateX(0%);
+    opacity: 1;
+  }
+  92% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes vfBeamSweepRtl {
+  0% {
+    transform: translateX(0%);
+    opacity: 0;
+  }
+  18% {
+    transform: translateX(0%);
+    opacity: 1;
+  }
+  92% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+/* True f/1.4 Shallow Depth-of-Field Bokeh Layer: Keeps Face Razor-Sharp & Melts Outer Backdrop */
+.vf-bokeh-dof {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  backdrop-filter: blur(4px) brightness(0.84) saturate(0.85);
+  -webkit-backdrop-filter: blur(4px) brightness(0.84) saturate(0.85);
+  mask-image: radial-gradient(
+    ellipse 44% 38% at 50% 34%,
+    transparent 45%,
+    rgba(0, 0, 0, 0.55) 72%,
+    #000000 100%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse 44% 38% at 50% 34%,
+    transparent 45%,
+    rgba(0, 0, 0, 0.55) 72%,
+    #000000 100%
+  );
+  transition: opacity 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.vf-monograph.is-locked .vf-bokeh-dof {
+  opacity: 1;
+}
+
+/* Authentic Subtle Analog Film Grain Texture */
+.vf-film-grain {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+
+.vf-monograph.is-mono .vf-film-grain {
+  opacity: 0.075;
+}
+
+/* Tonal Edge Vignette: Melts warm portrait edges organically into the gallery canvas */
+.vf-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse at 50% 36%,
+      transparent 44%,
+      rgba(9, 10, 14, 0.4) 82%,
+      rgba(7, 8, 12, 0.78) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(9, 10, 14, 0.22) 0%,
+      transparent 16%,
+      transparent 72%,
+      rgba(7, 8, 12, 0.86) 100%
+    );
+  transition: opacity 0.35s ease;
+}
+
+/* Subtle Pointer-Tracked Optical Glass Specular Sheen */
+.vf-specular-sheen {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    circle at var(--vf-gx) var(--vf-gy),
+    rgba(255, 255, 255, 0.16) 0%,
+    rgba(var(--accent-rgb), 0.08) 26%,
+    transparent 58%
+  );
+  transition: opacity 0.3s ease;
+}
+
+.vf-canvas:hover .vf-specular-sheen,
+.vf-monograph.is-locked .vf-specular-sheen {
+  opacity: 1;
+}
+
+/* Rule-of-Thirds Optical Composition Grid */
+.vf-thirds-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.22;
+  transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.vf-canvas:hover .vf-thirds-grid,
+.vf-canvas:focus-visible .vf-thirds-grid,
+.vf-monograph.is-locked .vf-thirds-grid {
+  opacity: 0.68;
+}
+
+.vf-line {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.vf-line-v1 {
+  inset-block: 0;
+  inset-inline-start: 33.333%;
+  width: 1px;
+}
+
+.vf-line-v2 {
+  inset-block: 0;
+  inset-inline-start: 66.666%;
+  width: 1px;
+}
+
+.vf-line-h1 {
+  inset-inline: 0;
+  inset-block-start: 33.333%;
+  height: 1px;
+}
+
+.vf-line-h2 {
+  inset-inline: 0;
+  inset-block-start: 66.666%;
+  height: 1px;
+}
+
+/* Precision Rangefinder Corner Brackets & Eye-AF Box */
+.vf-hud {
+  position: absolute;
+  inset: 14px;
+  z-index: 3;
+  pointer-events: none;
+  animation: vfOpticalBreathe 5.2s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+.vf-corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: rgba(var(--accent-rgb), 0.86);
+  border-style: solid;
+  border-width: 0;
+  transition:
+    transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.22s ease;
+}
+
+.vf-c-tl {
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  border-block-start-width: 1.5px;
+  border-inline-start-width: 1.5px;
+}
+
+.vf-c-tr {
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  border-block-start-width: 1.5px;
+  border-inline-end-width: 1.5px;
+}
+
+.vf-c-bl {
+  inset-block-end: 28px;
+  inset-inline-start: 0;
+  border-block-end-width: 1.5px;
+  border-inline-start-width: 1.5px;
+}
+
+.vf-c-br {
+  inset-block-end: 28px;
+  inset-inline-end: 0;
+  border-block-end-width: 1.5px;
+  border-inline-end-width: 1.5px;
+}
+
+/* AF-Lock Inward Precision Snap */
+.vf-canvas:hover .vf-c-tl,
+.vf-canvas:focus-visible .vf-c-tl,
+.vf-monograph.is-locked .vf-c-tl {
+  transform: translate3d(5px, 5px, 0);
+  border-color: var(--accent-light);
+}
+
+.vf-canvas:hover .vf-c-tr,
+.vf-canvas:focus-visible .vf-c-tr,
+.vf-monograph.is-locked .vf-c-tr {
+  transform: translate3d(-5px, 5px, 0);
+  border-color: var(--accent-light);
+}
+
+.vf-canvas:hover .vf-c-bl,
+.vf-canvas:focus-visible .vf-c-bl,
+.vf-monograph.is-locked .vf-c-bl {
+  transform: translate3d(5px, -5px, 0);
+  border-color: var(--accent-light);
+}
+
+.vf-canvas:hover .vf-c-br,
+.vf-canvas:focus-visible .vf-c-br,
+.vf-monograph.is-locked .vf-c-br {
+  transform: translate3d(-5px, -5px, 0);
+  border-color: var(--accent-light);
+}
+
+body[dir='rtl'] .vf-canvas:hover .vf-c-tl,
+body[dir='rtl'] .vf-canvas:focus-visible .vf-c-tl,
+body[dir='rtl'] .vf-monograph.is-locked .vf-c-tl {
+  transform: translate3d(-5px, 5px, 0);
+}
+
+body[dir='rtl'] .vf-canvas:hover .vf-c-bl,
+body[dir='rtl'] .vf-canvas:focus-visible .vf-c-bl,
+body[dir='rtl'] .vf-monograph.is-locked .vf-c-bl {
+  transform: translate3d(-5px, -5px, 0);
+}
+
+body[dir='rtl'] .vf-canvas:hover .vf-c-tr,
+body[dir='rtl'] .vf-canvas:focus-visible .vf-c-tr,
+body[dir='rtl'] .vf-monograph.is-locked .vf-c-tr {
+  transform: translate3d(5px, 5px, 0);
+}
+
+body[dir='rtl'] .vf-canvas:hover .vf-c-br,
+body[dir='rtl'] .vf-canvas:focus-visible .vf-c-br,
+body[dir='rtl'] .vf-monograph.is-locked .vf-c-br {
+  transform: translate3d(5px, -5px, 0);
+}
+
+/* Sony / Leica Precision Eye-AF Lock Bracket aligned on Face/Eyes (29% from top) */
+.vf-eye-af {
+  position: absolute;
+  inset-block-start: 28%;
+  inset-inline-start: 50%;
+  width: 72px;
+  height: 72px;
+  transform: translate(-50%, -50%) scale(1.16);
+  opacity: 0;
+  transition:
+    opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body[dir='rtl'] .vf-eye-af {
+  transform: translate(50%, -50%) scale(1.16);
+}
+
+.vf-canvas:hover .vf-eye-af,
+.vf-canvas:focus-visible .vf-eye-af {
+  opacity: 0.45;
+  transform: translate(-50%, -50%) scale(1.04);
+}
+
+body[dir='rtl'] .vf-canvas:hover .vf-eye-af,
+body[dir='rtl'] .vf-canvas:focus-visible .vf-eye-af {
+  transform: translate(50%, -50%) scale(1.04);
+}
+
+.vf-monograph.is-locked .vf-eye-af {
+  opacity: 0.96;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+body[dir='rtl'] .vf-monograph.is-locked .vf-eye-af {
+  transform: translate(50%, -50%) scale(1);
+}
+
+.vf-eye-corner {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-style: solid;
+  border-width: 0;
+  border-color: rgba(var(--accent-rgb), 0.9);
+  transition: border-color 0.22s ease;
+}
+
+.vf-monograph.is-locked .vf-eye-corner {
+  border-color: #34d399;
+}
+
+.vf-ec-tl {
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  border-block-start-width: 1.5px;
+  border-inline-start-width: 1.5px;
+}
+
+.vf-ec-tr {
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  border-block-start-width: 1.5px;
+  border-inline-end-width: 1.5px;
+}
+
+.vf-ec-bl {
+  inset-block-end: 0;
+  inset-inline-start: 0;
+  border-block-end-width: 1.5px;
+  border-inline-start-width: 1.5px;
+}
+
+.vf-ec-br {
+  inset-block-end: 0;
+  inset-inline-end: 0;
+  border-block-end-width: 1.5px;
+  border-inline-end-width: 1.5px;
+}
+
+.vf-eye-tag {
+  position: absolute;
+  inset-block-start: calc(100% + 5px);
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  color: rgba(var(--accent-rgb), 0.95);
+  white-space: nowrap;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
+}
+
+body[dir='rtl'] .vf-eye-tag {
+  transform: translateX(50%);
+}
+
+.vf-monograph.is-locked .vf-eye-tag {
+  color: #34d399;
+}
+
+@keyframes vfOpticalBreathe {
+  0%,
+  100% {
+    opacity: 0.78;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(0.994);
+  }
+}
+
+/* Mechanical Shutter Exposure Blink on Tap/Click */
+.vf-shutter-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 34%, rgba(255, 250, 240, 0.45), rgba(8, 9, 12, 0.75));
+  opacity: 0;
+}
+
+.vf-canvas.is-shutter .vf-shutter-veil {
+  animation: vfShutterBlink 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes vfShutterBlink {
+  0% {
+    opacity: 0;
+  }
+  35% {
+    opacity: 0.72;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Single-Line Unbreakable Bottom Optical Exposure Readout */
+.vf-optical-strip {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  z-index: 3;
+  padding-block: 10px 12px;
+  padding-inline: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 1.1px;
+  color: rgba(248, 250, 252, 0.9);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.vf-optical-spec,
+.vf-optical-mode {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.vf-optical-mode {
+  color: var(--accent-light);
+  font-weight: 700;
+  transition: color 0.2s ease;
+}
+
+.vf-optical-mode.is-locked {
+  color: #34d399;
+}
+
+/* Discoverable Interactive Darkroom Segmented Control */
+.vf-darkroom-bar {
+  position: relative;
+  z-index: 2;
+  width: calc(100% - 14px);
+  margin-inline: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 12px;
+}
+
+.vf-darkroom-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-micro);
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.vf-darkroom-label i {
+  color: var(--accent);
+  font-size: 0.85rem;
+}
+
+.vf-seg-track {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(var(--accent-rgb), 0.24);
+}
+
+.vf-seg-btn {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  min-height: 44px;
+  padding-block: 8px;
+  padding-inline: 14px;
+  border-radius: 7px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.vf-seg-btn:hover,
+.vf-seg-btn:focus-visible {
+  color: var(--text-primary);
+  outline: none;
+}
+
+.vf-seg-btn.is-active {
+  background: rgba(var(--accent-rgb), 0.18);
+  border-color: rgba(var(--accent-rgb), 0.45);
+  color: var(--accent-light);
+}
+
+/* Unboxed Architectural Museum Colophon */
+.vf-colophon {
+  position: relative;
+  z-index: 2;
+  width: calc(100% - 14px);
+  margin-inline: auto;
+  padding-block-start: 12px;
+  border-block-start: 1px solid rgba(var(--accent-rgb), 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.vf-colophon-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+.vf-colophon-identity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  text-align: start;
+}
+
+.vf-colophon-name {
+  font-size: var(--text-caption);
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.vf-colophon-sep {
+  color: rgba(var(--accent-rgb), 0.55);
+  font-weight: 400;
+}
+
+.vf-colophon-role {
+  font-size: var(--text-micro);
+  color: var(--accent);
+  font-weight: 600;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.vf-colophon-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px 12px;
+}
+
+.vf-colophon-plate {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 1.3px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.vf-colophon-hint {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  opacity: 0.88;
+  line-height: 1.45;
+  text-align: start;
+}
+
+/* Light Mode Gallery Paper Harmonization */
+[data-theme-mode='light'] .vf-offset-plate::after {
+  background: var(--bg-dark);
+}
+
+[data-theme-mode='light'] .vf-canvas {
+  box-shadow:
+    0 20px 50px rgba(15, 23, 42, 0.14),
+    0 0 0 1px rgba(15, 23, 42, 0.08);
+}
+
+[data-theme-mode='light'] .vf-seg-track {
+  background: rgba(15, 23, 42, 0.04);
+  border-color: rgba(15, 23, 42, 0.14);
+}
+
+[data-theme-mode='light'] .vf-seg-btn.is-active {
+  background: rgba(var(--accent-rgb), 0.15);
+  color: var(--text-primary);
+}
+
+[data-theme-mode='light'] .vf-vignette {
+  background:
+    radial-gradient(
+      ellipse at 50% 36%,
+      transparent 52%,
+      rgba(15, 23, 42, 0.16) 86%,
+      rgba(15, 23, 42, 0.36) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      transparent 68%,
+      rgba(15, 23, 42, 0.7) 100%
+    );
+}
+
+/* Respect accessibility reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .vf-plate-glint,
+  .vf-hud,
+  .scroll-line,
+  .vf-darkroom-curtain,
+  .vf-curtain-beam,
+  .vf-canvas.is-shutter .vf-shutter-veil {
+    animation: none !important;
+  }
+  .vf-canvas,
+  .vf-offset-plate {
+    transform: none !important;
+  }
+}
+
+/* About Text & Fluid Stats — Refined Editorial Contrast (Title Case vs Section All-Caps) */
+.about-content {
+  text-align: start;
+}
+
+.about-content h3 {
+  font-family: var(--font-body-en);
+  font-size: clamp(1.38rem, 2.4vw, 1.95rem);
+  font-weight: 600;
+  line-height: 1.32;
+  margin-block: 0 var(--space-heading-body);
+  letter-spacing: -0.015em;
+  text-transform: none;
+  color: var(--text-primary);
+  text-wrap: balance;
+}
+
+.about-content p {
+  color: var(--text-secondary);
+  margin-block: 0;
+  font-size: var(--text-body);
+}
+
+.about-content p + p {
+  margin-block-start: var(--space-paragraph-gap);
+}
+
+.about-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1rem, 2.5vw, 2rem);
+  margin-block-start: clamp(1.75rem, 3.5vw, 2.5rem);
+  padding-block-start: clamp(1.5rem, 3vw, 2.25rem);
+  border-block-start: 1px solid var(--border);
+}
+
+.stat-item h4 {
+  font-family: var(--font-display-en);
+  font-size: clamp(1.85rem, 3.8vw, 2.85rem);
+  font-weight: 500;
+  color: var(--accent);
+  margin-block: 0 6px;
+  letter-spacing: 1.5px;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-item span {
+  display: block;
+  font-size: var(--text-caption);
+  color: var(--text-muted);
+  line-height: 1.45;
+}

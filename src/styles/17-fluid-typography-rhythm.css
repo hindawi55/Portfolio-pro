@@ -1,0 +1,306 @@
+/* ========================================================
+   UNIVERSAL FLUID TYPOGRAPHY, HARMONIZED FONTS & SAFE RHYTHM ENGINE
+   Guarantees consistent bilingual typography, clamp() scaling,
+   safe spacing between headings/paragraphs, and zero-overlap Arabic text.
+   ======================================================== */
+
+/* 1. Harmonized Dynamic Font Routing (Replaces legacy hardcoded fonts) */
+body[dir="ltr"] {
+  font-family: var(--font-body-en);
+  font-size: var(--text-body);
+  line-height: var(--leading-en);
+  color: var(--text-primary);
+  background-color: var(--bg-dark);
+}
+
+body[dir="rtl"] {
+  font-family: var(--font-body-ar) !important;
+  font-size: var(--text-body);
+  line-height: var(--leading-ar);
+  color: var(--text-primary);
+  background-color: var(--bg-dark);
+}
+
+/* Display & Major Section Headings */
+body[dir="ltr"] .hero-title,
+body[dir="ltr"] .section-title,
+body[dir="ltr"] .about-title,
+body[dir="ltr"] .contact-title,
+body[dir="ltr"] .footer-logo,
+body[dir="ltr"] .nav-logo,
+body[dir="ltr"] .loader-text,
+body[dir="ltr"] .dossier-name {
+  font-family: var(--font-display-en);
+  line-height: var(--leading-heading-en);
+}
+
+body[dir="rtl"] .hero-title,
+body[dir="rtl"] .section-title,
+body[dir="rtl"] .about-title,
+body[dir="rtl"] .about-content h3,
+body[dir="rtl"] .contact-title,
+body[dir="rtl"] .contact-info h3,
+body[dir="rtl"] .footer-logo,
+body[dir="rtl"] .nav-logo,
+body[dir="rtl"] .loader-text,
+body[dir="rtl"] .dossier-name,
+body[dir="rtl"] .series-title,
+body[dir="rtl"] .editorial-card-title,
+body[dir="rtl"] .studio-title,
+body[dir="rtl"] .sub-title {
+  font-family: var(--font-display-ar) !important;
+  letter-spacing: 0 !important;
+  line-height: var(--leading-heading-ar) !important;
+}
+
+/* Buttons, Inputs, Badges & Controls inherit active bilingual family */
+body[dir="ltr"] button,
+body[dir="ltr"] input,
+body[dir="ltr"] select,
+body[dir="ltr"] textarea {
+  font-family: var(--font-body-en);
+}
+
+body[dir="rtl"] button,
+body[dir="rtl"] input,
+body[dir="rtl"] select,
+body[dir="rtl"] textarea,
+body[dir="rtl"] .btn,
+body[dir="rtl"] .filter-btn,
+body[dir="rtl"] .nav-links a {
+  font-family: var(--font-body-ar) !important;
+  letter-spacing: 0 !important;
+}
+
+/* 2. Universal Fluid Typography (clamp across every component tier) */
+.hero-title {
+  font-size: var(--text-hero);
+  margin-block-end: var(--space-heading-body);
+}
+
+.hero-subtitle,
+.hero-desc {
+  font-size: var(--text-body-lg);
+  margin-block-end: var(--space-paragraph-gap);
+}
+
+.section-header {
+  margin-block-end: clamp(2.25rem, 5vw, 4rem);
+}
+
+.section-label {
+  font-size: var(--text-micro);
+  margin-block-end: clamp(0.6rem, 1.2vw, 0.9rem);
+}
+
+.section-title {
+  font-size: var(--text-section) !important;
+  margin-block-end: var(--space-heading-body) !important;
+}
+
+.section-desc {
+  font-size: var(--text-body);
+  max-width: 68ch;
+  margin-inline: auto;
+}
+
+.about-title,
+.about-content h3,
+.contact-title,
+.contact-info h3 {
+  font-size: var(--text-h2);
+  margin-block-end: var(--space-heading-body);
+  text-wrap: balance;
+}
+
+.about-text,
+.contact-desc,
+.service-desc,
+.testimonial-text,
+.statement-text,
+.editorial-card-desc,
+.series-desc,
+.cv-summary-bio,
+.cv-bio-lead {
+  font-size: var(--text-body);
+}
+
+.series-title,
+.dossier-name,
+.studio-title {
+  font-size: var(--text-h2);
+}
+
+.sub-title,
+.service-title,
+.editorial-card-title,
+.proof-photo-title,
+.portal-session-banner h3,
+.delivery-banner-info h3 {
+  font-size: var(--text-h3);
+}
+
+.series-subtitle,
+.dossier-sub,
+.editorial-meta-row,
+.wing-intro-bar p,
+.exif-value,
+.proof-tech-sub {
+  font-size: var(--text-caption);
+}
+
+/* 3. Guaranteed Safe Spacing & Vertical Rhythm (Heading -> Body & Paragraph -> Paragraph) */
+body[dir="rtl"] p,
+body[dir="rtl"] li,
+body[dir="rtl"] .statement-text,
+body[dir="rtl"] .editorial-card-desc,
+body[dir="rtl"] .about-text,
+body[dir="rtl"] .section-desc,
+body[dir="rtl"] .series-desc,
+body[dir="rtl"] .service-desc,
+body[dir="rtl"] .wing-intro-bar p,
+body[dir="rtl"] .lightbox-caption {
+  line-height: var(--leading-ar) !important;
+}
+
+body[dir="ltr"] p,
+body[dir="ltr"] li,
+body[dir="ltr"] .statement-text,
+body[dir="ltr"] .editorial-card-desc,
+body[dir="ltr"] .about-text,
+body[dir="ltr"] .section-desc,
+body[dir="ltr"] .series-desc,
+body[dir="ltr"] .service-desc,
+body[dir="ltr"] .wing-intro-bar p,
+body[dir="ltr"] .lightbox-caption {
+  line-height: var(--leading-en) !important;
+}
+
+/* Enforce safe separation between consecutive paragraphs anywhere in the site */
+.about-content p + p,
+.cv-statement-box p + p,
+.dossier-content-card p + p,
+.contact-info p + p,
+.service-card p + p,
+.editorial-story-card p + p {
+  margin-block-start: var(--space-paragraph-gap);
+}
+
+/* Enforce safe clearance between Headings and Body inside cards & CV Dossier */
+.editorial-story-card {
+  padding: var(--space-card-padding) !important;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.65rem, 1.3vw, 0.95rem);
+}
+
+.editorial-card-header {
+  margin-block-end: 0 !important;
+  gap: 8px;
+}
+
+.editorial-card-title {
+  margin-block: 0 !important;
+  line-height: var(--leading-heading-ar);
+}
+
+.editorial-meta-row,
+.editorial-card-desc {
+  margin-block: 0 !important;
+}
+
+.wing-section-block {
+  margin-block-end: clamp(1.75rem, 3.5vw, 2.75rem);
+}
+
+.wing-section-block .sub-title {
+  margin-block-end: var(--space-heading-body) !important;
+}
+
+.cv-statement-box {
+  padding: var(--space-card-padding) !important;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-heading-body);
+}
+
+.statement-text {
+  margin: 0 !important;
+}
+
+.gear-editorial-item-box {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.5rem, 1vw, 0.75rem);
+  padding: clamp(0.95rem, 2vw, 1.25rem) !important;
+}
+
+.series-info-header h3,
+.series-title {
+  margin-block-end: clamp(0.55rem, 1.2vw, 0.85rem);
+}
+
+.series-subtitle {
+  margin-block-end: clamp(0.65rem, 1.3vw, 1rem);
+}
+
+.service-card h3,
+.service-title {
+  margin-block-end: clamp(0.65rem, 1.3vw, 0.95rem);
+}
+
+/* 4. Semantic Color Synchronization for Daylight / Custom Theme Palettes */
+[data-theme-mode="light"] body,
+[data-theme-mode="light"] .section {
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+}
+
+[data-theme-mode="light"] .navbar {
+  background: rgba(248, 246, 242, 0.92);
+  border-bottom-color: var(--border);
+}
+
+[data-theme-mode="light"] .navbar.scrolled {
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.08);
+}
+
+[data-theme-mode="light"] .editorial-story-card,
+[data-theme-mode="light"] .cv-statement-box,
+[data-theme-mode="light"] .impact-matrix-card,
+[data-theme-mode="light"] .service-card,
+[data-theme-mode="light"] .contact-form-card,
+[data-theme-mode="light"] .portal-lock-card,
+[data-theme-mode="light"] .portal-session-banner,
+[data-theme-mode="light"] .proof-frameless-card,
+[data-theme-mode="light"] .dossier-modal-dialog {
+  background: var(--bg-card);
+  border-color: var(--border);
+  color: var(--text-primary);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+[data-theme-mode="light"] .partner-name,
+[data-theme-mode="light"] .editorial-card-title,
+[data-theme-mode="light"] .dossier-name,
+[data-theme-mode="light"] .proof-photo-title,
+[data-theme-mode="light"] .vf-colophon-name {
+  color: var(--text-primary) !important;
+}
+
+[data-theme-mode="light"] .partner-role,
+[data-theme-mode="light"] .editorial-card-desc,
+[data-theme-mode="light"] .section-desc,
+[data-theme-mode="light"] .dossier-sub {
+  color: var(--text-secondary) !important;
+}
+
+/* 5. Mobile-First Touch Target Integrity (min 44px on interactive controls) */
+.btn,
+.filter-btn,
+.dossier-wing-tab,
+.toolbar-tab,
+.demo-chip {
+  min-height: 44px;
+}
