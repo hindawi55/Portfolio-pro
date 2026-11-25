@@ -187,16 +187,20 @@
 .footer-client-link {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
+  min-height: 44px;
   font-family: 'Cairo', sans-serif;
   font-size: 0.82rem;
   font-weight: 600;
   color: #94a3b8;
   background: rgba(255, 255, 255, 0.03);
   border: 1px dashed rgba(226, 177, 112, 0.3);
-  padding: 6px 18px;
+  padding: 8px 18px;
   border-radius: 9999px;
   text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
   transition: all 0.25s ease;
 }
 

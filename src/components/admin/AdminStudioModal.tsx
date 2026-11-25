@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Language } from '../../types';
 import { useSiteCMS } from '../../context/SiteCMSContext';
+import { subscribeNewBookingCount } from '../../services/cmsService';
 import { AdminAuthGate } from './AdminAuthGate';
 import { AdminThemePanel } from './AdminThemePanel';
 import { AdminLayoutSeoPanel } from './AdminLayoutSeoPanel';
@@ -28,6 +29,90 @@ type AdminTab =
   | 'layout'
   | 'backups';
 
+interface NavGroup {
+  id: string;
+  titleAr: string;
+  titleEn: string;
+  items: {
+    id: AdminTab;
+    icon: string;
+    labelAr: string;
+    labelEn: string;
+  }[];
+}
+
+const ADMIN_NAV_GROUPS: NavGroup[] = [
+  {
+    id: 'content-media',
+    titleAr: 'المحتوى والمعارض',
+    titleEn: 'Content & Media',
+    items: [
+      {
+        id: 'content',
+        icon: 'fa-pen-nib',
+        labelAr: 'التعديل الحر الشامل',
+        labelEn: 'Free Content Editor',
+      },
+      {
+        id: 'portfolio',
+        icon: 'fa-images',
+        labelAr: 'المعارض والصور و EXIF',
+        labelEn: 'Portfolio & EXIF',
+      },
+      {
+        id: 'cv',
+        icon: 'fa-id-card',
+        labelAr: 'أركان السيرة الذاتية',
+        labelEn: '5-Wing CV Dossier',
+      },
+    ],
+  },
+  {
+    id: 'client-ops',
+    titleAr: 'العملاء والحجوزات',
+    titleEn: 'Client Operations',
+    items: [
+      {
+        id: 'bookings',
+        icon: 'fa-inbox',
+        labelAr: 'طلبات الحجز (CRM)',
+        labelEn: 'Booking Inbox',
+      },
+      {
+        id: 'clients',
+        icon: 'fa-user-shield',
+        labelAr: 'بوابة العملاء (Proofing)',
+        labelEn: 'Client Proofing',
+      },
+    ],
+  },
+  {
+    id: 'design-system',
+    titleAr: 'الهوية والنظام',
+    titleEn: 'Design & System',
+    items: [
+      {
+        id: 'theme',
+        icon: 'fa-palette',
+        labelAr: 'الألوان والخطوط السائلة',
+        labelEn: 'Colors & Typography',
+      },
+      {
+        id: 'layout',
+        icon: 'fa-layer-group',
+        labelAr: 'هيكل الموقع و SEO',
+        labelEn: 'Layout & SEO',
+      },
+      {
+        id: 'backups',
+        icon: 'fa-history',
+        labelAr: 'النسخ الاحتياطي والاستنساخ',
+        labelEn: 'Backups & Clone',
+      },
+    ],
+  },
+];
+
 export const AdminStudioModal: React.FC<AdminStudioModalProps> = ({
   currentLang,
   onToggleLang,
@@ -36,95 +121,55 @@ export const AdminStudioModal: React.FC<AdminStudioModalProps> = ({
 }) => {
   const { user, isAdmin, signOutAdmin } = useSiteCMS();
   const [activeTab, setActiveTab] = useState<AdminTab>('content');
+  const [newBookingsCount, setNewBookingsCount] = useState<number>(0);
 
   const isAr = currentLang === 'ar';
 
   useEffect(() => {
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKeyDown);
     return () => {
       document.body.style.overflow = prevOverflow;
-      window.removeEventListener('keydown', onKeyDown);
     };
-  }, [onClose]);
+  }, []);
 
-  const navItems: { id: AdminTab; icon: string; labelAr: string; labelEn: string }[] = [
-    {
-      id: 'content',
-      icon: 'fa-pen-nib',
-      labelAr: 'التعديل الحر الشامل',
-      labelEn: 'Free Content Editor',
-    },
-    {
-      id: 'portfolio',
-      icon: 'fa-images',
-      labelAr: 'المعارض والصور و EXIF',
-      labelEn: 'Portfolio & EXIF',
-    },
-    {
-      id: 'cv',
-      icon: 'fa-id-card',
-      labelAr: 'أركان السيرة الذاتية',
-      labelEn: '5-Wing CV Dossier',
-    },
-    {
-      id: 'bookings',
-      icon: 'fa-inbox',
-      labelAr: 'طلبات الحجز (CRM)',
-      labelEn: 'Booking Inbox',
-    },
-    {
-      id: 'clients',
-      icon: 'fa-user-shield',
-      labelAr: 'بوابة العملاء (Proofing)',
-      labelEn: 'Client Proofing',
-    },
-    {
-      id: 'theme',
-      icon: 'fa-palette',
-      labelAr: 'الألوان والخطوط السائلة',
-      labelEn: 'Colors & Typography',
-    },
-    {
-      id: 'layout',
-      icon: 'fa-layer-group',
-      labelAr: 'هيكل الموقع و SEO',
-      labelEn: 'Layout & SEO',
-    },
-    {
-      id: 'backups',
-      icon: 'fa-history',
-      labelAr: 'النسخ الاحتياطي والاستنساخ',
-      labelEn: 'Backups & Clone',
-    },
-  ];
+  useEffect(() => {
+    if (!isAdmin) {
+      setNewBookingsCount(0);
+      return;
+    }
+
+    const unsubscribe = subscribeNewBookingCount(
+      (count) => setNewBookingsCount(count),
+      () => {
+        // Non-fatal fallback if offline or listener drops
+      }
+    );
+
+    return () => unsubscribe();
+  }, [isAdmin]);
 
   return (
     <div
       className="admin-os-overlay"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Luxe Studio OS Admin Panel"
+      role="region"
+      aria-label={isAr ? 'لوحة تحكم Luxe Studio OS' : 'Luxe Studio OS Admin Workspace'}
     >
       <div className="admin-os-shell">
         {!isAdmin ? (
           <AdminAuthGate
             currentLang={currentLang}
+            onToggleLang={onToggleLang}
             onClose={onClose}
             onShowToast={onShowToast}
           />
         ) : (
           <>
-            {/* Top Bar */}
+            {/* Standalone Full-Screen Workspace Top Bar */}
             <header className="admin-os-topbar">
               <div className="admin-os-brand">
                 <div className="admin-os-brand-icon">
-                  <i className="fas fa-crown"></i>
+                  <i className="fas fa-crown" aria-hidden="true"></i>
                 </div>
                 <div className="admin-os-brand-text">
                   <span className="admin-os-badge">LUXE STUDIO OS</span>
@@ -134,7 +179,7 @@ export const AdminStudioModal: React.FC<AdminStudioModalProps> = ({
 
               <div className="admin-os-top-actions">
                 <span className="admin-user-pill" title={user?.email || ''}>
-                  <i className="fas fa-user-check"></i>
+                  <i className="fas fa-user-check" aria-hidden="true"></i>
                   <span>{user?.email?.split('@')[0] || 'Admin'}</span>
                 </span>
 
@@ -142,8 +187,9 @@ export const AdminStudioModal: React.FC<AdminStudioModalProps> = ({
                   type="button"
                   className="admin-btn-ghost admin-btn-sm"
                   onClick={onToggleLang}
+                  aria-label={isAr ? 'Switch to English' : 'التبديل إلى العربية'}
                 >
-                  <i className="fas fa-globe"></i>
+                  <i className="fas fa-globe" aria-hidden="true"></i>
                   <span>{isAr ? 'EN' : 'عربي'}</span>
                 </button>
 
@@ -152,40 +198,72 @@ export const AdminStudioModal: React.FC<AdminStudioModalProps> = ({
                   className="admin-btn-ghost admin-btn-sm"
                   onClick={() => void signOutAdmin()}
                   title={isAr ? 'تسجيل الخروج' : 'Sign Out'}
+                  aria-label={isAr ? 'تسجيل الخروج' : 'Sign Out'}
                 >
-                  <i className="fas fa-sign-out-alt"></i>
+                  <i className="fas fa-sign-out-alt" aria-hidden="true"></i>
+                  <span className="admin-signout-label">
+                    {isAr ? 'خروج' : 'Sign Out'}
+                  </span>
                 </button>
 
                 <button
                   type="button"
-                  className="admin-close-btn"
+                  className="admin-return-site-btn"
                   onClick={onClose}
-                  aria-label={isAr ? 'إغلاق لوحة التحكم' : 'Close Admin Panel'}
                 >
-                  <i className="fas fa-times"></i>
+                  <i className="fas fa-home" aria-hidden="true"></i>
+                  <span>{isAr ? 'العودة للموقع' : 'Return to Site'}</span>
                 </button>
               </div>
             </header>
 
-            {/* Body: Pro Sidebar Navigation + Active Module */}
+            {/* Body: 3-Group Sidebar Navigation + Active Module */}
             <div className="admin-os-body">
-              <aside className="admin-os-sidebar" role="tablist">
-                {navItems.map((item) => {
-                  const active = activeTab === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      role="tab"
-                      aria-selected={active}
-                      className={`admin-nav-item ${active ? 'active' : ''}`}
-                      onClick={() => setActiveTab(item.id)}
-                    >
-                      <i className={`fas ${item.icon}`}></i>
-                      <span>{isAr ? item.labelAr : item.labelEn}</span>
-                    </button>
-                  );
-                })}
+              <aside
+                className="admin-os-sidebar"
+                role="tablist"
+                aria-label={isAr ? 'أقسام لوحة التحكم' : 'Admin Navigation'}
+              >
+                {ADMIN_NAV_GROUPS.map((group) => (
+                  <div key={group.id} className="admin-nav-group">
+                    <div className="admin-nav-group-label">
+                      {isAr ? group.titleAr : group.titleEn}
+                    </div>
+                    <div className="admin-nav-group-items">
+                      {group.items.map((item) => {
+                        const active = activeTab === item.id;
+                        const showBookingBadge = item.id === 'bookings' && newBookingsCount > 0;
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            role="tab"
+                            aria-selected={active}
+                            className={`admin-nav-item ${active ? 'active' : ''}`}
+                            onClick={() => setActiveTab(item.id)}
+                          >
+                            <i className={`fas ${item.icon}`} aria-hidden="true"></i>
+                            <span className="admin-nav-item-text">
+                              {isAr ? item.labelAr : item.labelEn}
+                            </span>
+                            {showBookingBadge && (
+                              <span
+                                className="admin-nav-badge"
+                                aria-label={
+                                  isAr
+                                    ? `${newBookingsCount} حجوزات جديدة`
+                                    : `${newBookingsCount} new bookings`
+                                }
+                              >
+                                {newBookingsCount}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
               </aside>
 
               <main className="admin-os-content">

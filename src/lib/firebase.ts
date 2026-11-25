@@ -1,12 +1,16 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { doc, getDocFromServer, getFirestore } from 'firebase/firestore';
+import { doc, getDocFromServer, initializeFirestore } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 
-// CRITICAL: Pass the provisioned firestoreDatabaseId so Firestore connects to the active Enterprise database
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+// CRITICAL: Pass the provisioned firestoreDatabaseId with auto-detected long polling so restricted networks never stall
+export const db = initializeFirestore(
+  app,
+  { experimentalAutoDetectLongPolling: true },
+  firebaseConfig.firestoreDatabaseId
+);
 export const auth = getAuth(app);
 export const googleAuthProvider = new GoogleAuthProvider();
 

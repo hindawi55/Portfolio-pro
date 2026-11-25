@@ -446,6 +446,14 @@
     align-items: stretch;
     padding: 20px;
   }
+  .cv-open-banner .banner-left {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    width: 100%;
+    min-width: 0;
+    flex: none;
+  }
   .cv-open-banner .banner-actions {
     flex-direction: column;
     width: 100%;

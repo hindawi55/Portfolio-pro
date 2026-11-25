@@ -210,6 +210,7 @@
   padding-block: var(--space-section-block);
   padding-inline: clamp(1.25rem, 5vw, 3.75rem);
   position: relative;
+  scroll-margin-top: 88px;
 }
 
 .section-header {
@@ -808,7 +809,7 @@ body[dir='rtl'] .vf-monograph.is-locked .vf-c-br {
   transform: translate3d(5px, -5px, 0);
 }
 
-/* Sony / Leica Precision Eye-AF Lock Bracket aligned on Face/Eyes (29% from top) */
+/* Transient Precision Focus Acquisition Bracket aligned on Face/Eyes (0.9s pulse then clears face) */
 .vf-eye-af {
   position: absolute;
   inset-block-start: 28%;
@@ -818,7 +819,7 @@ body[dir='rtl'] .vf-monograph.is-locked .vf-c-br {
   transform: translate(-50%, -50%) scale(1.16);
   opacity: 0;
   transition:
-    opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1),
     transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -828,7 +829,7 @@ body[dir='rtl'] .vf-eye-af {
 
 .vf-canvas:hover .vf-eye-af,
 .vf-canvas:focus-visible .vf-eye-af {
-  opacity: 0.45;
+  opacity: 0.38;
   transform: translate(-50%, -50%) scale(1.04);
 }
 
@@ -837,12 +838,12 @@ body[dir='rtl'] .vf-canvas:focus-visible .vf-eye-af {
   transform: translate(50%, -50%) scale(1.04);
 }
 
-.vf-monograph.is-locked .vf-eye-af {
+.vf-monograph.is-focus-pulsing .vf-eye-af {
   opacity: 0.96;
   transform: translate(-50%, -50%) scale(1);
 }
 
-body[dir='rtl'] .vf-monograph.is-locked .vf-eye-af {
+body[dir='rtl'] .vf-monograph.is-focus-pulsing .vf-eye-af {
   transform: translate(50%, -50%) scale(1);
 }
 
@@ -856,7 +857,7 @@ body[dir='rtl'] .vf-monograph.is-locked .vf-eye-af {
   transition: border-color 0.22s ease;
 }
 
-.vf-monograph.is-locked .vf-eye-corner {
+.vf-monograph.is-focus-pulsing .vf-eye-corner {
   border-color: #34d399;
 }
 
@@ -886,28 +887,6 @@ body[dir='rtl'] .vf-monograph.is-locked .vf-eye-af {
   inset-inline-end: 0;
   border-block-end-width: 1.5px;
   border-inline-end-width: 1.5px;
-}
-
-.vf-eye-tag {
-  position: absolute;
-  inset-block-start: calc(100% + 5px);
-  inset-inline-start: 50%;
-  transform: translateX(-50%);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.58rem;
-  font-weight: 700;
-  letter-spacing: 1.4px;
-  color: rgba(var(--accent-rgb), 0.95);
-  white-space: nowrap;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
-}
-
-body[dir='rtl'] .vf-eye-tag {
-  transform: translateX(50%);
-}
-
-.vf-monograph.is-locked .vf-eye-tag {
-  color: #34d399;
 }
 
 @keyframes vfOpticalBreathe {
@@ -984,27 +963,28 @@ body[dir='rtl'] .vf-eye-tag {
   color: #34d399;
 }
 
-/* Discoverable Interactive Darkroom Segmented Control */
+/* Single-Row Aligned Interactive Darkroom Segmented Control */
 .vf-darkroom-bar {
   position: relative;
   z-index: 2;
   width: calc(100% - 14px);
   margin-inline: auto;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: space-between;
-  gap: 10px 12px;
+  gap: 10px;
 }
 
 .vf-darkroom-label {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: var(--text-micro);
+  gap: 7px;
+  font-size: clamp(0.75rem, 2.2vw, 0.84rem);
   font-weight: 600;
   color: var(--text-secondary);
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .vf-darkroom-label i {
@@ -1016,10 +996,11 @@ body[dir='rtl'] .vf-eye-tag {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 4px;
+  padding: 3px;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(var(--accent-rgb), 0.24);
+  flex-shrink: 0;
 }
 
 .vf-seg-btn {
@@ -1029,9 +1010,9 @@ body[dir='rtl'] .vf-eye-tag {
   color: var(--text-secondary);
   min-height: 44px;
   padding-block: 8px;
-  padding-inline: 14px;
+  padding-inline: clamp(10px, 2.8vw, 15px);
   border-radius: 7px;
-  font-size: 0.78rem;
+  font-size: clamp(0.72rem, 2.1vw, 0.78rem);
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -1053,7 +1034,7 @@ body[dir='rtl'] .vf-eye-tag {
   color: var(--accent-light);
 }
 
-/* Unboxed Architectural Museum Colophon */
+/* Clean Unboxed Architectural Museum Colophon */
 .vf-colophon {
   position: relative;
   z-index: 2;
@@ -1061,9 +1042,6 @@ body[dir='rtl'] .vf-eye-tag {
   margin-inline: auto;
   padding-block-start: 12px;
   border-block-start: 1px solid rgba(var(--accent-rgb), 0.2);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
 }
 
 .vf-colophon-top {
@@ -1071,7 +1049,7 @@ body[dir='rtl'] .vf-eye-tag {
   flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: 4px 12px;
+  gap: 6px 12px;
 }
 
 .vf-colophon-identity {
@@ -1103,14 +1081,6 @@ body[dir='rtl'] .vf-eye-tag {
   white-space: nowrap;
 }
 
-.vf-colophon-bottom {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 4px 12px;
-}
-
 .vf-colophon-plate {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.7rem;
@@ -1118,14 +1088,6 @@ body[dir='rtl'] .vf-eye-tag {
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-}
-
-.vf-colophon-hint {
-  font-size: 0.76rem;
-  color: var(--text-muted);
-  opacity: 0.88;
-  line-height: 1.45;
-  text-align: start;
 }
 
 /* Light Mode Gallery Paper Harmonization */
@@ -1210,10 +1172,20 @@ body[dir='rtl'] .vf-eye-tag {
 .about-stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(1rem, 2.5vw, 2rem);
+  gap: 0;
   margin-block-start: clamp(1.75rem, 3.5vw, 2.5rem);
-  padding-block-start: clamp(1.5rem, 3vw, 2.25rem);
-  border-block-start: 1px solid var(--border);
+  padding-block: clamp(1.25rem, 3vw, 1.75rem);
+  border-block: 1px solid var(--border);
+}
+
+.stat-item {
+  text-align: center;
+  padding-inline: clamp(6px, 2vw, 18px);
+  min-width: 0;
+}
+
+.stat-item + .stat-item {
+  border-inline-start: 1px solid var(--border);
 }
 
 .stat-item h4 {
@@ -1229,7 +1201,8 @@ body[dir='rtl'] .vf-eye-tag {
 
 .stat-item span {
   display: block;
-  font-size: var(--text-caption);
+  font-size: clamp(0.74rem, 2vw, 0.875rem);
   color: var(--text-muted);
   line-height: 1.45;
+  text-wrap: balance;
 }

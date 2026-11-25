@@ -109,17 +109,21 @@ export const App: React.FC = () => {
           const hash = window.location.hash || '';
           const path = window.location.pathname || '';
 
-          if (path === '/admin' || path.startsWith('/admin/') || hash.startsWith('#admin')) {
-            setIsAdminStudioOpen(true);
-          } else if (path === '/studio' || path.startsWith('/studio/') || hash.startsWith('#studio')) {
-            setIsStudioManagerOpen(true);
-          } else if (hash.startsWith('#cv-dossier')) {
-            setIsCVDossierOpen(true);
-          } else if (hash.startsWith('#client-portal') || hash.startsWith('#portal')) {
-            if (hash.includes('pin=')) {
-              setIsClientPortalOpen(true);
-            } else {
-              history.replaceState(null, '', window.location.pathname + window.location.search);
+          const isAdminRoute =
+            path === '/admin' || path.startsWith('/admin/') || hash.startsWith('#admin');
+          setIsAdminStudioOpen(isAdminRoute);
+
+          if (!isAdminRoute) {
+            if (path === '/studio' || path.startsWith('/studio/') || hash.startsWith('#studio')) {
+              setIsStudioManagerOpen(true);
+            } else if (hash.startsWith('#cv-dossier')) {
+              setIsCVDossierOpen(true);
+            } else if (hash.startsWith('#client-portal') || hash.startsWith('#portal')) {
+              if (hash.includes('pin=')) {
+                setIsClientPortalOpen(true);
+              } else {
+                history.replaceState(null, '', window.location.pathname + window.location.search);
+              }
             }
           }
         },
@@ -209,71 +213,76 @@ export const App: React.FC = () => {
 
   return (
     <>
-      <Loader />
-      <CustomCursor />
-      <Particles />
+      {!isAdminStudioOpen && (
+        <>
+          <Loader />
+          <CustomCursor />
+          <Particles />
 
-      {/* Persistent Client Session Status Ribbon ONLY when browsing public site (eliminates duplicate header) */}
-      {activeClientSession && !isClientIsolated && (
-        <div className="client-active-ribbon">
-          <div className="ribbon-inner">
-            <div className="ribbon-client-info">
-              <span className="ribbon-pulse"></span>
-              <i className="fas fa-user-shield"></i>
-              <span className="ribbon-title">
-                {currentLang === 'ar' ? 'جلسة عميل نشطة:' : 'Active Client Session:'}{' '}
-                <strong>{currentLang === 'ar' ? activeClientSession.clientNameAr : activeClientSession.clientNameEn}</strong>
-              </span>
+          {/* Persistent Client Session Status Ribbon ONLY when browsing public site (eliminates duplicate header) */}
+          {activeClientSession && !isClientIsolated && (
+            <div className="client-active-ribbon">
+              <div className="ribbon-inner">
+                <div className="ribbon-client-info">
+                  <span className="ribbon-pulse"></span>
+                  <i className="fas fa-user-shield"></i>
+                  <span className="ribbon-title">
+                    {currentLang === 'ar' ? 'جلسة عميل نشطة:' : 'Active Client Session:'}{' '}
+                    <strong>{currentLang === 'ar' ? activeClientSession.clientNameAr : activeClientSession.clientNameEn}</strong>
+                  </span>
+                </div>
+
+                <div className="ribbon-actions">
+                  <button
+                    type="button"
+                    className="ribbon-btn ribbon-btn-mode"
+                    onClick={() => setIsClientIsolated(!isClientIsolated)}
+                  >
+                    <i className={`fas ${isClientIsolated ? 'fa-globe' : 'fa-compress-arrows-alt'}`}></i>
+                    <span>{isClientIsolated ? t.portal_switch_public : t.portal_switch_isolated}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="ribbon-btn ribbon-btn-logout"
+                    onClick={() => {
+                      setActiveClientSession(null);
+                      setIsClientIsolated(false);
+                      showToast(currentLang === 'ar' ? 'تم قفل جلسة العميل والخروج بأمان' : 'Client session locked');
+                    }}
+                  >
+                    <i className="fas fa-lock"></i>
+                    <span>{t.portal_lock_and_exit}</span>
+                  </button>
+                </div>
+              </div>
             </div>
+          )}
 
-            <div className="ribbon-actions">
-              <button
-                type="button"
-                className="ribbon-btn ribbon-btn-mode"
-                onClick={() => setIsClientIsolated(!isClientIsolated)}
-              >
-                <i className={`fas ${isClientIsolated ? 'fa-globe' : 'fa-compress-arrows-alt'}`}></i>
-                <span>{isClientIsolated ? t.portal_switch_public : t.portal_switch_isolated}</span>
-              </button>
-
-              <button
-                type="button"
-                className="ribbon-btn ribbon-btn-logout"
-                onClick={() => {
-                  setActiveClientSession(null);
-                  setIsClientIsolated(false);
-                  showToast(currentLang === 'ar' ? 'تم قفل جلسة العميل والخروج بأمان' : 'Client session locked');
-                }}
-              >
-                <i className="fas fa-lock"></i>
-                <span>{t.portal_lock_and_exit}</span>
-              </button>
-            </div>
-          </div>
-        </div>
+          {activeClientSession && isClientIsolated ? (
+            <ClientPortalHeader
+              currentLang={currentLang}
+              activeSession={activeClientSession}
+              onToggleLang={toggleLanguage}
+              onToggleIsolated={() => setIsClientIsolated(false)}
+              isIsolated={true}
+              onLogout={() => {
+                setActiveClientSession(null);
+                setIsClientIsolated(false);
+                showToast(currentLang === 'ar' ? 'تم قفل جلسة العميل والخروج بأمان' : 'Client session locked');
+              }}
+            />
+          ) : (
+            <Navigation
+              currentLang={currentLang}
+              onToggleLang={toggleLanguage}
+              onOpenCVDossier={() => setIsCVDossierOpen(true)}
+            />
+          )}
+        </>
       )}
 
-      {activeClientSession && isClientIsolated ? (
-        <ClientPortalHeader
-          currentLang={currentLang}
-          activeSession={activeClientSession}
-          onToggleLang={toggleLanguage}
-          onToggleIsolated={() => setIsClientIsolated(false)}
-          isIsolated={true}
-          onLogout={() => {
-            setActiveClientSession(null);
-            setIsClientIsolated(false);
-            showToast(currentLang === 'ar' ? 'تم قفل جلسة العميل والخروج بأمان' : 'Client session locked');
-          }}
-        />
-      ) : (
-        <Navigation
-          currentLang={currentLang}
-          onToggleLang={toggleLanguage}
-          onOpenCVDossier={() => setIsCVDossierOpen(true)}
-        />
-      )}
-
+      {!isAdminStudioOpen && (
       <main>
         {/* If in Isolated Client Mode, display only the Client Proofing Workspace */}
         {activeClientSession && isClientIsolated ? (
@@ -375,6 +384,7 @@ export const App: React.FC = () => {
           </>
         )}
       </main>
+      )}
 
       {/* Dedicated Client Portal Modal Workspace (Opened only on request) */}
       {isClientPortalOpen && !isClientIsolated && (
@@ -507,14 +517,16 @@ export const App: React.FC = () => {
               setIsAdminStudioOpen(false);
               safeRun(
                 'App.Router',
-                'clearAdminHash',
+                'resetAdminRouteToRoot',
                 () => {
-                  if (window.location.hash.startsWith('#admin')) {
-                    history.replaceState(
-                      null,
-                      '',
-                      window.location.pathname + window.location.search
-                    );
+                  const path = window.location.pathname || '';
+                  const hash = window.location.hash || '';
+                  if (
+                    path === '/admin' ||
+                    path.startsWith('/admin/') ||
+                    hash.startsWith('#admin')
+                  ) {
+                    history.replaceState(null, '', '/' + window.location.search);
                   }
                 },
                 undefined,
@@ -525,15 +537,14 @@ export const App: React.FC = () => {
         </ErrorBoundary>
       )}
 
-      {!isClientIsolated && (
+      {!isAdminStudioOpen && !isClientIsolated && (
         <Footer
           currentLang={currentLang}
           onOpenClientPortal={() => setIsClientPortalOpen(true)}
-          onOpenAdminStudio={() => setIsAdminStudioOpen(true)}
         />
       )}
 
-      {lightboxSeries && (
+      {!isAdminStudioOpen && lightboxSeries && (
         <ErrorBoundary
           scope="modal"
           moduleName="Cinema Lightbox & Wall Art"

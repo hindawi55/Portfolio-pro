@@ -5,10 +5,25 @@
 
 .portfolio-filter {
   display: flex;
-  justify-content: center;
-  gap: 30px;
-  margin-bottom: 60px;
-  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: center;
+  gap: clamp(8px, 2.5vw, 24px);
+  margin-block-end: clamp(1.75rem, 4vw, 2.75rem);
+  padding-block-end: 4px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.portfolio-filter::-webkit-scrollbar {
+  display: none;
+}
+
+@media (min-width: 769px) {
+  .portfolio-filter {
+    justify-content: center;
+  }
 }
 
 .filter-btn {
@@ -19,8 +34,11 @@
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
-  padding: 8px 20px;
+  min-height: 44px;
+  padding: 8px clamp(12px, 2.5vw, 20px);
   position: relative;
+  flex-shrink: 0;
+  white-space: nowrap;
   transition: color 0.3s ease;
 }
 
@@ -32,12 +50,16 @@
 .filter-btn.active::after {
   content: '';
   position: absolute;
-  bottom: 0;
-  left: 50%;
+  inset-block-end: 2px;
+  inset-inline-start: 50%;
   transform: translateX(-50%);
   width: 30px;
   height: 2px;
   background: var(--accent);
+}
+
+body[dir='rtl'] .filter-btn.active::after {
+  transform: translateX(50%);
 }
 
 /* Series Showcase Cards */
@@ -183,6 +205,9 @@
   letter-spacing: 3px;
   color: var(--accent);
   line-height: 1;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
 }
 
 .series-filmstrip {

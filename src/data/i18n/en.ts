@@ -80,7 +80,7 @@ export const enTranslations: TranslationDictionary = {
   portal_switch_isolated: 'Private Workspace',
   portal_lock_and_exit: 'Lock & Exit Session',
   portal_package_info: 'Original Master Package (24.2MP)',
-  mission_label: 'Mission & Vision',
+  mission_label: 'Core Philosophy',
   mission_title: 'Mission & Vision',
   mission_desc: 'Every image is a powerful tool for global advocacy',
   mission_1_title: 'Capture the Essence',
@@ -95,7 +95,7 @@ export const enTranslations: TranslationDictionary = {
   mission_4_title: 'Professional Content',
   mission_4_desc:
     'Delivering high-impact images and multimedia materials specifically designed for organizational reports and advocacy.',
-  services_label: 'Services',
+  services_label: 'What We Offer',
   services_title: 'Services',
   services_desc: 'Comprehensive visual solutions for your organization',
   service_1_title: 'Documentary Photography',
@@ -116,7 +116,7 @@ export const enTranslations: TranslationDictionary = {
   service_6_title: 'Consultations',
   service_6_desc:
     'Specialized consulting in visual communication and photography for non-governmental organizations.',
-  contact_label: 'Contact & Booking',
+  contact_label: 'Start a Commission',
   contact_title: 'Contact & Booking',
   contact_desc: "Let's start an impactful visual project together or request an instant quotation",
   contact_heading: "Let's Talk About Your Next Project",

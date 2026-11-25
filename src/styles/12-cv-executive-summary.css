@@ -105,8 +105,13 @@
   display: flex;
   align-items: center;
   gap: 18px;
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.cv-open-banner .banner-text {
+  min-width: 0;
   flex: 1;
-  min-width: 280px;
 }
 
 .cv-open-banner .banner-icon {
@@ -128,6 +133,7 @@
   font-weight: 700;
   color: #ffffff;
   margin: 0 0 4px;
+  overflow-wrap: break-word;
 }
 
 .cv-open-banner .banner-text p {
@@ -135,6 +141,7 @@
   color: #cbd5e1;
   margin: 0;
   line-height: 1.5;
+  overflow-wrap: break-word;
 }
 
 .cv-open-banner .banner-actions {

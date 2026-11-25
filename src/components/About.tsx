@@ -26,9 +26,11 @@ export const About: React.FC<AboutProps> = ({ currentLang }) => {
   const scrollRafRef = useRef<number | null>(null);
   const shutterTimerRef = useRef<number | null>(null);
   const revealTimerRef = useRef<number | null>(null);
+  const focusPulseTimerRef = useRef<number | null>(null);
   const hasPlayedRevealRef = useRef(false);
 
   const [focusLocked, setFocusLocked] = useState(false);
+  const [focusReticlePulse, setFocusReticlePulse] = useState(false);
   const [shutterFlash, setShutterFlash] = useState(false);
   const [isRevealingDarkroom, setIsRevealingDarkroom] = useState(false);
   const [filmMode, setFilmMode] = useState<'color' | 'mono'>(
@@ -139,6 +141,7 @@ export const About: React.FC<AboutProps> = ({ currentLang }) => {
       if (pointerRafRef.current !== null) cancelAnimationFrame(pointerRafRef.current);
       if (shutterTimerRef.current !== null) window.clearTimeout(shutterTimerRef.current);
       if (revealTimerRef.current !== null) window.clearTimeout(revealTimerRef.current);
+      if (focusPulseTimerRef.current !== null) window.clearTimeout(focusPulseTimerRef.current);
     };
   }, []);
 
@@ -191,7 +194,21 @@ export const About: React.FC<AboutProps> = ({ currentLang }) => {
 
   const toggleFocusLock = useCallback(() => {
     setIsRevealingDarkroom(false);
-    setFocusLocked((prev) => !prev);
+    setFocusLocked((prev) => {
+      const next = !prev;
+      if (focusPulseTimerRef.current !== null) {
+        window.clearTimeout(focusPulseTimerRef.current);
+      }
+      if (next) {
+        setFocusReticlePulse(true);
+        focusPulseTimerRef.current = window.setTimeout(() => {
+          setFocusReticlePulse(false);
+        }, 900);
+      } else {
+        setFocusReticlePulse(false);
+      }
+      return next;
+    });
     triggerShutterPulse();
   }, [triggerShutterPulse]);
 
@@ -235,8 +252,8 @@ export const About: React.FC<AboutProps> = ({ currentLang }) => {
         <div ref={stageRef} className="vf-stage reveal active">
           <figure
             className={`vf-monograph ${focusLocked ? 'is-locked' : ''} ${
-              filmMode === 'mono' ? 'is-mono' : 'is-color'
-            }`}
+              focusReticlePulse ? 'is-focus-pulsing' : ''
+            } ${filmMode === 'mono' ? 'is-mono' : 'is-color'}`}
           >
             <div className="vf-canvas-mount">
               {/* Architectural Offset Brass Hairline Plate with Scroll-Linked Depth Parallax */}
@@ -255,7 +272,7 @@ export const About: React.FC<AboutProps> = ({ currentLang }) => {
                 aria-label={
                   currentLang === 'ar'
                     ? 'معاينة عدسة المصورة — اضغط لتفعيل عزل الخلفية وتثبيت التركيز البصري'
-                    : 'Photographer optical portrait — activate to toggle f/1.4 Eye-AF focus lock'
+                    : 'Photographer optical portrait — activate to toggle f/1.4 focus lock'
                 }
                 onPointerMove={handlePointerMove}
                 onPointerLeave={handlePointerLeave}
@@ -315,22 +332,19 @@ export const About: React.FC<AboutProps> = ({ currentLang }) => {
                   <span className="vf-line vf-line-h2"></span>
                 </div>
 
-                {/* Precision Rangefinder Corner Brackets + Eye-AF Lock Reticle */}
+                {/* Precision Rangefinder Corner Brackets + Transient Focus Acquisition Bracket */}
                 <div className="vf-hud" aria-hidden="true">
                   <span className="vf-corner vf-c-tl"></span>
                   <span className="vf-corner vf-c-tr"></span>
                   <span className="vf-corner vf-c-bl"></span>
                   <span className="vf-corner vf-c-br"></span>
 
-                  {/* Eye-AF Precision Lock Bracket positioned at the Golden-Ratio Eye Line */}
+                  {/* Transient 0.9s Focus Acquisition Bracket (Fades cleanly so face remains unobstructed) */}
                   <div className="vf-eye-af">
                     <span className="vf-eye-corner vf-ec-tl"></span>
                     <span className="vf-eye-corner vf-ec-tr"></span>
                     <span className="vf-eye-corner vf-ec-bl"></span>
                     <span className="vf-eye-corner vf-ec-br"></span>
-                    <span className="vf-eye-tag">
-                      {focusLocked ? 'EYE AF' : 'AF'}
-                    </span>
                   </div>
                 </div>
 
@@ -349,7 +363,7 @@ export const About: React.FC<AboutProps> = ({ currentLang }) => {
               </div>
             </div>
 
-            {/* Unmistakable Interactive Darkroom Segmented Control (Discoverable UX) */}
+            {/* Single-Row Aligned Darkroom Film Look Segmented Control */}
             <div className="vf-darkroom-bar">
               <span className="vf-darkroom-label">
                 <i className="fas fa-adjust" aria-hidden="true"></i>
@@ -362,7 +376,7 @@ export const About: React.FC<AboutProps> = ({ currentLang }) => {
                 aria-label={
                   currentLang === 'ar'
                     ? 'تبديل نمط الصورة بين الألوان والأبيض والأسود'
-                    : 'Switch portrait between Color and Monochrome B&W'
+                    : 'Switch portrait between Color and B&W'
                 }
               >
                 <button
@@ -371,7 +385,7 @@ export const About: React.FC<AboutProps> = ({ currentLang }) => {
                   aria-pressed={filmMode === 'color'}
                   onClick={() => handleFilmModeChange('color')}
                 >
-                  {currentLang === 'ar' ? 'ألوان طبيعية' : 'Color'}
+                  {currentLang === 'ar' ? 'ألوان' : 'Color'}
                 </button>
                 <button
                   type="button"
@@ -379,7 +393,7 @@ export const About: React.FC<AboutProps> = ({ currentLang }) => {
                   aria-pressed={filmMode === 'mono'}
                   onClick={() => handleFilmModeChange('mono')}
                 >
-                  {currentLang === 'ar' ? 'أبيض وأسود' : 'B&W Mono'}
+                  {currentLang === 'ar' ? 'أبيض وأسود' : 'B&W'}
                 </button>
               </div>
             </div>
@@ -396,18 +410,6 @@ export const About: React.FC<AboutProps> = ({ currentLang }) => {
                 </div>
                 <span className="vf-colophon-plate">
                   {platePrefix} · {plateNum}
-                </span>
-              </div>
-
-              <div className="vf-colophon-bottom">
-                <span className="vf-colophon-hint">
-                  {focusLocked
-                    ? currentLang === 'ar'
-                      ? 'تم تفعيل عزل الخلفية f/1.4 وقفل التركيز · اضغط للإلغاء'
-                      : 'f/1.4 Eye-AF depth isolation active · Tap portrait to release'
-                    : currentLang === 'ar'
-                    ? 'اضغط على الصورة لتفعيل عزل العدسة f/1.4 وقفل التركيز'
-                    : 'Tap portrait to engage f/1.4 Eye-AF focus isolation'}
                 </span>
               </div>
             </figcaption>

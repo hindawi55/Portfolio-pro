@@ -5,13 +5,11 @@ import { useSiteCMS } from '../context/SiteCMSContext';
 interface FooterProps {
   currentLang: Language;
   onOpenClientPortal?: () => void;
-  onOpenAdminStudio?: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({
   currentLang,
   onOpenClientPortal,
-  onOpenAdminStudio,
 }) => {
   const { layout, seo, getTranslation } = useSiteCMS();
   const t = getTranslation(currentLang);
@@ -59,38 +57,20 @@ export const Footer: React.FC<FooterProps> = ({
         </a>
       </div>
 
-      <div
-        className="footer-utility-link-row"
-        style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '16px' }}
-      >
-        {layout.showClientPortalButton && (
+      {layout.showClientPortalButton && (
+        <div className="footer-utility-link-row">
           <button
             type="button"
             onClick={onOpenClientPortal}
             className="footer-client-link"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', font: 'inherit' }}
           >
             <i className="fas fa-shield-alt"></i>
             <span>
-              {currentLang === 'ar' ? 'بوابة تسليم العملاء (Client Area)' : 'Client Delivery Access'}
+              {currentLang === 'ar' ? 'بوابة تسليم العملاء' : 'Client Delivery Access'}
             </span>
           </button>
-        )}
-
-        {onOpenAdminStudio && (
-          <button
-            type="button"
-            onClick={onOpenAdminStudio}
-            className="footer-client-link"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', font: 'inherit' }}
-          >
-            <i className="fas fa-sliders-h"></i>
-            <span>
-              {currentLang === 'ar' ? 'لوحة التحكم (Studio OS)' : 'Studio Admin OS'}
-            </span>
-          </button>
-        )}
-      </div>
+        </div>
+      )}
 
       <p className="footer-copy">{t.footer_copy}</p>
     </footer>

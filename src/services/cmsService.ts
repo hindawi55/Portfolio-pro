@@ -4,6 +4,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  onSnapshot,
   orderBy,
   query,
   serverTimestamp,
@@ -475,6 +476,22 @@ export async function listBookingInquiries(): Promise<BookingInquiryRecord[]> {
   } catch (error) {
     handleFirestoreError(error, OperationType.LIST, path);
   }
+}
+
+export function subscribeNewBookingCount(
+  onCount: (count: number) => void,
+  onError?: (error: unknown) => void
+): () => void {
+  const q = query(collection(db, 'booking_inquiries'), where('status', '==', 'new'));
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      onCount(snapshot.size);
+    },
+    (error) => {
+      onError?.(error);
+    }
+  );
 }
 
 export async function updateBookingInquiryStatus(
