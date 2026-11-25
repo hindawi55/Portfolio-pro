@@ -359,31 +359,38 @@
   gap: 12px;
 }
 
+.cv-print-only-sheet {
+  display: none;
+}
+
 @media print {
   body * {
     visibility: hidden;
   }
+  .cv-print-only-sheet,
   #cvPrintableArea,
   #cvPrintableArea * {
+    display: block;
     visibility: visible;
   }
   #cvPrintableArea {
     position: absolute;
-    left: 0;
+    inset-inline: 0;
     top: 0;
     width: 100%;
-    background: #fff !important;
-    color: #111 !important;
-    padding: 20px !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    padding: 28px !important;
   }
   .sheet-header h2,
   .sheet-section h4 {
     color: #9c6c2e !important;
   }
   .sheet-sub,
+  .sheet-contact-line,
   .sheet-section p,
   .sheet-section li {
-    color: #222 !important;
+    color: #1e293b !important;
   }
 }
 

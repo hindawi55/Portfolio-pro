@@ -28,8 +28,11 @@ export const enTranslations: TranslationDictionary = {
     'As a documentary photographer and trainer, I combine my background in social initiatives with documentary photography. My work focuses on capturing authentic human experiences, amplifying the voices of marginalized communities, and creating impactful visual narratives that support sustainable development and humanitarian goals.',
   about_p2:
     'I have practical experience in civil society and youth initiatives, combining visual skills with a deep understanding of advocacy and social impact to deliver content that truly reflects the core mission of local and international organizations.',
+  stat_years_val: '2+',
   stat_years: 'Years Experience',
+  stat_projects_val: '57+',
   stat_projects: 'Projects Done',
+  stat_workshops_val: '7+',
   stat_workshops: 'Workshops Held',
   portfolio_label: 'Selected Works',
   portfolio_title: 'Documentary Portfolio',
@@ -156,5 +159,6 @@ export const enTranslations: TranslationDictionary = {
   wallart_size_small: '50 × 70 cm (A2)',
   wallart_size_large: '70 × 100 cm (Grand)',
   wallart_order_btn: 'Order Fine Art Print via WhatsApp',
+  footer_client_access: 'Client Delivery Access',
   footer_copy: '© 2026 Enaam Ali Osman. All Rights Reserved.',
 };

@@ -37,7 +37,7 @@
   font-size: 0.72rem;
   letter-spacing: 1px;
   text-transform: uppercase;
-  border-radius: 9999px;
+  border-radius: 6px;
   background: rgba(226, 177, 112, 0.12);
   color: var(--accent);
   border: 1px solid rgba(226, 177, 112, 0.32);
@@ -71,7 +71,7 @@
 .lightbox-btn-close-safe {
   width: 44px;
   height: 44px;
-  border-radius: 50%;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(226, 177, 112, 0.35);
   color: #ffffff;
@@ -101,7 +101,7 @@
   background: rgba(14, 18, 25, 0.94);
   border: 1px solid rgba(226, 177, 112, 0.35);
   box-shadow: 0 10px 32px rgba(0, 0, 0, 0.8), 0 0 18px rgba(226, 177, 112, 0.12);
-  border-radius: 9999px;
+  border-radius: 12px;
   padding: 6px 16px;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -130,8 +130,8 @@
   align-items: center;
   gap: 8px;
   padding: 6px 12px;
-  border-radius: 9999px;
-  min-height: 38px;
+  border-radius: 8px;
+  min-height: 40px;
   transition: all 0.22s ease;
   white-space: nowrap;
 }
@@ -168,7 +168,7 @@
 .lightbox-btn {
   width: 44px;
   height: 44px;
-  border-radius: 50%;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.14);
   color: #ffffff;
@@ -228,7 +228,7 @@
   transform: translateY(-50%);
   width: 52px;
   height: 52px;
-  border-radius: 50%;
+  border-radius: 12px;
   background: rgba(12, 14, 20, 0.88);
   border: 1px solid rgba(226, 177, 112, 0.35);
   color: #ffffff;

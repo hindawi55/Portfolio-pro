@@ -7,9 +7,8 @@ import {
   fetchProofFeedback,
   saveProofFeedback,
 } from '../services/cmsService';
-import { ClientPortalFooter } from './ClientPortalFooter';
 import { PortalLockScreen } from './portal/PortalLockScreen';
-import { PortalProofCard } from './portal/PortalProofCard';
+import { PortalSessionWorkspace } from './portal/PortalSessionWorkspace';
 import { copyTextSafely, safeRun } from '../utils/errorDiagnostics';
 
 interface ClientPortalProps {
@@ -27,6 +26,45 @@ interface ClientPortalProps {
 }
 
 const getLocalFeedbackKey = (pin: string) => `luxe_portal_feedback_${pin}`;
+const PORTAL_GUARD_STORAGE_KEY = 'eao_portal_guard_v1';
+const MAX_FAILED_ATTEMPTS = 5;
+
+interface PortalGuardState {
+  failures: number;
+  lockCount: number;
+  lockUntil: number;
+}
+
+const readPortalGuard = (): PortalGuardState => {
+  try {
+    const raw = window.sessionStorage.getItem(PORTAL_GUARD_STORAGE_KEY);
+    if (!raw) return { failures: 0, lockCount: 0, lockUntil: 0 };
+    const parsed = JSON.parse(raw) as Partial<PortalGuardState>;
+    return {
+      failures: typeof parsed.failures === 'number' ? parsed.failures : 0,
+      lockCount: typeof parsed.lockCount === 'number' ? parsed.lockCount : 0,
+      lockUntil: typeof parsed.lockUntil === 'number' ? parsed.lockUntil : 0,
+    };
+  } catch {
+    return { failures: 0, lockCount: 0, lockUntil: 0 };
+  }
+};
+
+const writePortalGuard = (next: PortalGuardState) => {
+  try {
+    window.sessionStorage.setItem(PORTAL_GUARD_STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    // Ignore storage quota errors in restricted sandboxes
+  }
+};
+
+const isCloudSessionExpired = (expiryDate: string | undefined, isCloudSynced: boolean): boolean => {
+  if (!isCloudSynced || !expiryDate) return false;
+  const trimmed = expiryDate.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return false;
+  const endOfDayMs = Date.parse(`${trimmed}T23:59:59`);
+  return !Number.isNaN(endOfDayMs) && Date.now() > endOfDayMs;
+};
 
 export const ClientPortal: React.FC<ClientPortalProps> = ({
   currentLang,
@@ -45,6 +83,14 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
   const [isCloudSession, setIsCloudSession] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
   const [pinError, setPinError] = useState(false);
+  const [expiredError, setExpiredError] = useState<string | null>(null);
+  const [guardState, setGuardState] = useState<PortalGuardState>(() => readPortalGuard());
+  const [cooldownSeconds, setCooldownSeconds] = useState<number>(() => {
+    const initial = readPortalGuard();
+    return initial.lockUntil > Date.now()
+      ? Math.ceil((initial.lockUntil - Date.now()) / 1000)
+      : 0;
+  });
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [activeNotePhotoId, setActiveNotePhotoId] = useState<string | null>(null);
@@ -56,6 +102,58 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
     currentLang === 'ar'
       ? layout.brandNameAr || 'إنعام علي عثمان'
       : layout.brandNameEn || 'Enaam Ali Osman';
+
+  // Live cooldown countdown ticker when brute-force guard is active
+  useEffect(() => {
+    if (guardState.lockUntil <= Date.now()) {
+      setCooldownSeconds(0);
+      return;
+    }
+    const tick = () => {
+      const remaining = Math.ceil((guardState.lockUntil - Date.now()) / 1000);
+      if (remaining <= 0) {
+        setCooldownSeconds(0);
+        const cleared = { ...guardState, lockUntil: 0 };
+        setGuardState(cleared);
+        writePortalGuard(cleared);
+      } else {
+        setCooldownSeconds(remaining);
+      }
+    };
+    tick();
+    const timer = window.setInterval(tick, 1000);
+    return () => window.clearInterval(timer);
+  }, [guardState]);
+
+  const recordFailedAttempt = useCallback(() => {
+    const nextFailures = guardState.failures + 1;
+    if (nextFailures >= MAX_FAILED_ATTEMPTS) {
+      const nextLockCount = guardState.lockCount + 1;
+      const lockSeconds = Math.min(120, 30 * nextLockCount);
+      const next: PortalGuardState = {
+        failures: 0,
+        lockCount: nextLockCount,
+        lockUntil: Date.now() + lockSeconds * 1000,
+      };
+      setGuardState(next);
+      writePortalGuard(next);
+      setCooldownSeconds(lockSeconds);
+    } else {
+      const next: PortalGuardState = {
+        ...guardState,
+        failures: nextFailures,
+      };
+      setGuardState(next);
+      writePortalGuard(next);
+    }
+  }, [guardState]);
+
+  const resetPortalGuard = useCallback(() => {
+    const clean: PortalGuardState = { failures: 0, lockCount: 0, lockUntil: 0 };
+    setGuardState(clean);
+    writePortalGuard(clean);
+    setCooldownSeconds(0);
+  }, []);
 
   const hydrateSessionFeedback = useCallback(async (pin: string, cloudSynced: boolean) => {
     const nextFavs: Record<string, boolean> = {};
@@ -92,6 +190,19 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
 
   const activateSession = useCallback(
     async (found: ClientSession, cloudSynced: boolean, fromLink = false) => {
+      if (isCloudSessionExpired(found.expiryDate, cloudSynced)) {
+        const msg =
+          currentLang === 'ar'
+            ? `انتهت صلاحية رابط هذه الجلسة (${found.expiryDate}). يرجى استخدام خيار استرجاع الرمز أو تجديد الجلسة.`
+            : `This client gallery expired on ${found.expiryDate}. Please request access renewal below.`;
+        setExpiredError(msg);
+        setPinError(false);
+        onShowToast(msg);
+        return;
+      }
+
+      resetPortalGuard();
+      setExpiredError(null);
       setActiveSession(found);
       setIsCloudSession(cloudSynced);
       setPinError(false);
@@ -108,7 +219,14 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
           : `Session unlocked: ${found.clientNameEn}`
       );
     },
-    [currentLang, hydrateSessionFeedback, onSessionStateChange, onShowToast, onToggleIsolatedMode]
+    [
+      currentLang,
+      hydrateSessionFeedback,
+      onSessionStateChange,
+      onShowToast,
+      onToggleIsolatedMode,
+      resetPortalGuard,
+    ]
   );
 
   // Auto-unlock session if pin is passed in URL query or hash params
@@ -169,8 +287,10 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
 
   const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (cooldownSeconds > 0) return;
     const cleanPin = pinInput.trim();
     if (!cleanPin) return;
+    setExpiredError(null);
     setUnlocking(true);
     try {
       const result = await fetchClientSessionWithMeta(cleanPin);
@@ -178,6 +298,7 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
         await activateSession(result.session, result.isCloudSynced, false);
       } else {
         setPinError(true);
+        recordFailedAttempt();
       }
     } finally {
       setUnlocking(false);
@@ -185,7 +306,9 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
   };
 
   const handleAutofillPin = async (pin: string) => {
+    if (cooldownSeconds > 0) return;
     setPinInput(pin);
+    setExpiredError(null);
     setUnlocking(true);
     try {
       const result = await fetchClientSessionWithMeta(pin);
@@ -193,6 +316,7 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
         await activateSession(result.session, result.isCloudSynced, false);
       } else {
         setPinError(true);
+        recordFailedAttempt();
       }
     } finally {
       setUnlocking(false);
@@ -463,185 +587,46 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
             currentLang={currentLang}
             pinInput={pinInput}
             pinError={pinError}
+            expiredError={expiredError}
+            cooldownSeconds={cooldownSeconds}
+            failedAttempts={guardState.failures}
             unlocking={unlocking}
             onPinChange={(val) => {
               setPinInput(val);
               setPinError(false);
+              setExpiredError(null);
             }}
             onUnlock={(e) => void handleUnlock(e)}
             onAutofillPin={(pin) => void handleAutofillPin(pin)}
+            onShowToast={onShowToast}
           />
         ) : (
-          <div className="portal-workspace">
-            {/* Session Info Banner */}
-            <div className="portal-session-banner">
-              <div className="session-info-main">
-                <div className="session-status-row">
-                  <div className="session-status-badge">
-                    <i className="fas fa-shield-alt"></i>
-                    <span>
-                      {currentLang === 'ar' ? activeSession.statusAr : activeSession.statusEn}
-                    </span>
-                  </div>
-                  <div className="session-pin-badge">
-                    <i className="fas fa-key"></i>
-                    <span>PIN #{activeSession.pin}</span>
-                  </div>
-                  {isCloudSession && (
-                    <div className="session-pin-badge">
-                      <i className="fas fa-cloud"></i>
-                      <span>{currentLang === 'ar' ? 'مزامنة سحابية حية' : 'Live Cloud Sync'}</span>
-                    </div>
-                  )}
-                </div>
-
-                <h3>
-                  {currentLang === 'ar'
-                    ? activeSession.projectTitleAr
-                    : activeSession.projectTitleEn}
-                </h3>
-
-                <div className="session-meta-line">
-                  <span>
-                    <i className="fas fa-building"></i>
-                    {currentLang === 'ar'
-                      ? activeSession.clientNameAr
-                      : activeSession.clientNameEn}
-                  </span>
-                  <span>
-                    <i className="far fa-calendar-alt"></i>
-                    {activeSession.date}
-                  </span>
-                  <span>
-                    <i className="fas fa-images"></i>
-                    {activeSession.photos.length} {t.photos_count_suffix}
-                  </span>
-                  <span className="package-size-pill">
-                    <i className="fas fa-database"></i>
-                    {activeSession.packageSize}
-                  </span>
-                </div>
-              </div>
-
-              <div className="session-actions-top">
-                <button
-                  type="button"
-                  className="btn btn-outline portal-btn-sm portal-btn-share"
-                  onClick={() => void handleCopyDirectLink()}
-                  title={
-                    currentLang === 'ar'
-                      ? 'نسخ الرابط السري المباشر للجلسة لمشاركته مع العميل'
-                      : 'Copy direct secret link for client'
-                  }
-                >
-                  <i className="fas fa-link"></i>
-                  <span>
-                    {currentLang === 'ar' ? 'مشاركة الرابط السري' : 'Share Direct Link'}
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-outline portal-btn-sm"
-                  onClick={handleDownloadAll}
-                >
-                  <i className="fas fa-cloud-download-alt"></i>
-                  <span>{t.portal_download_all}</span>
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-primary portal-btn-sm"
-                  onClick={handleSubmitProofs}
-                >
-                  <i className="fab fa-whatsapp"></i>
-                  <span>
-                    {t.portal_export_selection} ({selectedCount})
-                  </span>
-                </button>
-                {onToggleIsolatedMode && (
-                  <button
-                    type="button"
-                    className="btn btn-outline portal-btn-toggle-isolate"
-                    onClick={() => onToggleIsolatedMode(!isIsolatedMode)}
-                    title={isIsolatedMode ? t.portal_switch_public : t.portal_switch_isolated}
-                  >
-                    <i className={`fas ${isIsolatedMode ? 'fa-globe' : 'fa-expand-alt'}`}></i>
-                    <span>
-                      {isIsolatedMode ? t.portal_switch_public : t.portal_switch_isolated}
-                    </span>
-                  </button>
-                )}
-                <button
-                  type="button"
-                  className="btn btn-outline portal-btn-logout"
-                  onClick={handleLogout}
-                  title={t.portal_lock_and_exit}
-                >
-                  <i className="fas fa-sign-out-alt"></i>
-                  <span>{t.portal_lock_and_exit}</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Proofing Filter & Counter Bar */}
-            <div className="portal-toolbar">
-              <div className="toolbar-left">
-                <button
-                  type="button"
-                  className={`toolbar-tab ${filterMode === 'all' ? 'active' : ''}`}
-                  onClick={() => setFilterMode('all')}
-                >
-                  <i className="fas fa-th"></i>
-                  <span>
-                    {t.portal_all_photos} ({activeSession.photos.length})
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  className={`toolbar-tab ${filterMode === 'favorites' ? 'active' : ''}`}
-                  onClick={() => setFilterMode('favorites')}
-                >
-                  <i className="fas fa-heart"></i>
-                  <span>
-                    {t.portal_favorites_only} ({selectedCount})
-                  </span>
-                </button>
-              </div>
-
-              <div className="toolbar-right">
-                <span className="selected-status">
-                  {t.portal_favorites_count} <strong>{selectedCount}</strong> /{' '}
-                  {activeSession.photos.length}
-                </span>
-              </div>
-            </div>
-
-            {/* Frameless High-End Photography Proofing Grid */}
-            <div className="portal-proofing-grid">
-              {activeSession.photos
-                .filter((photo) => (filterMode === 'favorites' ? favorites[photo.id] : true))
-                .map((photo, index) => (
-                  <PortalProofCard
-                    key={photo.id}
-                    currentLang={currentLang}
-                    photo={photo}
-                    photoIndex={index}
-                    isFav={!!favorites[photo.id]}
-                    savedNote={notes[photo.id]}
-                    isNoteComposerOpen={activeNotePhotoId === photo.id}
-                    noteDraft={noteDraft}
-                    onOpenLightbox={handleOpenPhotoInLightbox}
-                    onToggleFavorite={toggleFavorite}
-                    onOpenNote={handleOpenNote}
-                    onChangeNoteDraft={setNoteDraft}
-                    onCancelNote={() => setActiveNotePhotoId(null)}
-                    onSaveNote={handleSaveNote}
-                    onDownloadSingle={handleDownloadSingle}
-                  />
-                ))}
-            </div>
-
-            <ClientPortalFooter currentLang={currentLang} activeSession={activeSession} />
-          </div>
+          <PortalSessionWorkspace
+            currentLang={currentLang}
+            t={t}
+            activeSession={activeSession}
+            isCloudSession={isCloudSession}
+            isIsolatedMode={isIsolatedMode}
+            selectedCount={selectedCount}
+            filterMode={filterMode}
+            favorites={favorites}
+            notes={notes}
+            activeNotePhotoId={activeNotePhotoId}
+            noteDraft={noteDraft}
+            onChangeFilterMode={setFilterMode}
+            onCopyDirectLink={() => void handleCopyDirectLink()}
+            onDownloadAll={handleDownloadAll}
+            onSubmitProofs={handleSubmitProofs}
+            onToggleIsolatedMode={onToggleIsolatedMode}
+            onLogout={handleLogout}
+            onOpenLightbox={handleOpenPhotoInLightbox}
+            onToggleFavorite={toggleFavorite}
+            onOpenNote={handleOpenNote}
+            onChangeNoteDraft={setNoteDraft}
+            onCancelNote={() => setActiveNotePhotoId(null)}
+            onSaveNote={handleSaveNote}
+            onDownloadSingle={handleDownloadSingle}
+          />
         )}
       </div>
     </section>

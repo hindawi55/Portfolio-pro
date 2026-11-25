@@ -33,6 +33,7 @@ export interface SiteSeoConfig {
   whatsappNumber: string;
   contactEmail: string;
   instagramUrl: string;
+  facebookUrl?: string;
   linkedinUrl: string;
 }
 
@@ -114,8 +115,10 @@ export const DEFAULT_SEO_CONFIG: SiteSeoConfig = {
   ogImageUrl: '',
   whatsappNumber: '249117789498',
   contactEmail: 'enaam.osman@documentary.studio',
-  instagramUrl: 'https://instagram.com',
-  linkedinUrl: 'https://linkedin.com',
+  instagramUrl: 'https://www.instagram.com/enaam_creation?igsh=azVxMWZveDJlOTFz',
+  facebookUrl: 'https://www.facebook.com/share/1HD2tAfyVD/',
+  linkedinUrl:
+    'https://www.linkedin.com/in/enaam-ali-6a482a306?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app',
 };
 
 export const DEFAULT_CONTENT_OVERRIDES: SiteContentOverrides = {

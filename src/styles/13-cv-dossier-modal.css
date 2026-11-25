@@ -49,7 +49,7 @@
   position: relative;
   width: 64px;
   height: 64px;
-  border-radius: 50%;
+  border-radius: 12px;
   border: 2px solid var(--accent);
   padding: 2px;
   flex-shrink: 0;
@@ -58,7 +58,7 @@
 .dossier-avatar img {
   width: 100%;
   height: 100%;
-  border-radius: 50%;
+  border-radius: 10px;
   object-fit: cover;
 }
 
@@ -68,7 +68,7 @@
   inset-inline-end: 2px;
   width: 14px;
   height: 14px;
-  border-radius: 50%;
+  border-radius: 4px;
   background: #22c55e;
   border: 2px solid #0d1117;
 }
@@ -88,7 +88,7 @@
   background: rgba(226, 177, 112, 0.15);
   border: 1px solid rgba(226, 177, 112, 0.35);
   padding: 2px 8px;
-  border-radius: 9999px;
+  border-radius: 6px;
 }
 
 .dossier-pill-subtle {
@@ -96,7 +96,7 @@
   color: #94a3b8;
   background: rgba(255, 255, 255, 0.05);
   padding: 2px 8px;
-  border-radius: 9999px;
+  border-radius: 6px;
 }
 
 .dossier-name {
@@ -149,7 +149,7 @@
   width: 44px;
   height: 44px;
   min-width: 44px;
-  border-radius: 50%;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(226, 177, 112, 0.35);
   color: #ffffff;
@@ -445,7 +445,7 @@
   inset-inline-start: -41px;
   width: 20px;
   height: 20px;
-  border-radius: 50%;
+  border-radius: 6px;
   background: #0d1117;
   border: 2px solid var(--accent);
   display: flex;
@@ -459,7 +459,7 @@
   content: '';
   width: 8px;
   height: 8px;
-  border-radius: 50%;
+  border-radius: 2px;
   background: var(--accent);
 }
 
@@ -608,4 +608,40 @@
   color: #ffffff;
   letter-spacing: 0.3px;
 }
+
+@media (max-width: 768px) {
+  .cv-open-banner {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 20px;
+  }
+  .cv-open-banner .banner-left {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    width: 100%;
+    min-width: 0;
+    flex: none;
+  }
+  .cv-open-banner .banner-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  .cv-btn-open-dossier,
+  .cv-btn-pdf {
+    width: 100%;
+    justify-content: center;
+  }
+  .dossier-modal-dialog {
+    margin: 0;
+    max-height: 92vh;
+  }
+  .dossier-modal-header {
+    padding: 18px 16px;
+  }
+  .dossier-modal-body {
+    padding: 18px 16px;
+  }
+}
+
 

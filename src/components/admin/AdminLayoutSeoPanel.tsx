@@ -288,6 +288,54 @@ export const AdminLayoutSeoPanel: React.FC<AdminLayoutSeoPanelProps> = ({
               onChange={(e) => setSeoDraft({ ...seoDraft, contactEmail: e.target.value })}
             />
           </div>
+          <div className="admin-field">
+            <label htmlFor="seoInstagram">{isAr ? 'رابط إنستغرام (Instagram URL)' : 'Instagram Profile URL'}</label>
+            <input
+              id="seoInstagram"
+              type="url"
+              dir="ltr"
+              maxLength={320}
+              placeholder="https://www.instagram.com/..."
+              value={seoDraft.instagramUrl || ''}
+              onChange={(e) => setSeoDraft({ ...seoDraft, instagramUrl: e.target.value })}
+            />
+          </div>
+          <div className="admin-field">
+            <label htmlFor="seoFacebook">{isAr ? 'رابط فيسبوك (Facebook URL)' : 'Facebook Page/Profile URL'}</label>
+            <input
+              id="seoFacebook"
+              type="url"
+              dir="ltr"
+              maxLength={320}
+              placeholder="https://www.facebook.com/..."
+              value={seoDraft.facebookUrl || ''}
+              onChange={(e) => setSeoDraft({ ...seoDraft, facebookUrl: e.target.value })}
+            />
+          </div>
+          <div className="admin-field">
+            <label htmlFor="seoLinkedin">{isAr ? 'رابط لينكدإن (LinkedIn URL)' : 'LinkedIn Profile URL'}</label>
+            <input
+              id="seoLinkedin"
+              type="url"
+              dir="ltr"
+              maxLength={320}
+              placeholder="https://www.linkedin.com/in/..."
+              value={seoDraft.linkedinUrl || ''}
+              onChange={(e) => setSeoDraft({ ...seoDraft, linkedinUrl: e.target.value })}
+            />
+          </div>
+          <div className="admin-field">
+            <label htmlFor="seoOgImage">{isAr ? 'صورة المشاركة الاجتماعية (OG Image URL)' : 'Social Share OG Image URL'}</label>
+            <input
+              id="seoOgImage"
+              type="url"
+              dir="ltr"
+              maxLength={320}
+              placeholder="https://..."
+              value={seoDraft.ogImageUrl || ''}
+              onChange={(e) => setSeoDraft({ ...seoDraft, ogImageUrl: e.target.value })}
+            />
+          </div>
         </div>
       </section>
 

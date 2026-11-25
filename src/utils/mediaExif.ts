@@ -175,3 +175,39 @@ export async function optimizePhotoFile(
     URL.revokeObjectURL(objectUrl);
   }
 }
+
+export const MAX_SAFE_DOC_BYTES = 900 * 1024;
+
+export function estimatePayloadBytes(payload: unknown): number {
+  try {
+    return new TextEncoder().encode(JSON.stringify(payload)).length;
+  } catch {
+    return JSON.stringify(payload).length;
+  }
+}
+
+/**
+ * Adaptive multi-pass optimizer keeping inline photo uploads crisp while guaranteeing
+ * multiple uploaded photos fit comfortably inside Firestore's 1 MiB document ceiling.
+ */
+export async function optimizePhotoForBudget(
+  file: File,
+  targetMaxKb = 115
+): Promise<{ dataUrl: string; sizeKb: number; width: number; height: number }> {
+  const passes: Array<{ dim: number; q: number }> = [
+    { dim: 1080, q: 0.78 },
+    { dim: 920, q: 0.7 },
+    { dim: 780, q: 0.62 },
+    { dim: 640, q: 0.54 },
+  ];
+
+  let latest = await optimizePhotoFile(file, passes[0].dim, passes[0].q);
+  if (latest.sizeKb <= targetMaxKb) return latest;
+
+  for (let i = 1; i < passes.length; i++) {
+    latest = await optimizePhotoFile(file, passes[i].dim, passes[i].q);
+    if (latest.sizeKb <= targetMaxKb) return latest;
+  }
+  return latest;
+}
+

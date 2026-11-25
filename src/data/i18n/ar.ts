@@ -28,8 +28,11 @@ export const arTranslations: TranslationDictionary = {
     'كمصورة وثائقية ومدربة، أجمع بين خلفيتي في المبادرات الاجتماعية والتصوير الوثائقي. يركز عملي على التقاط التجارب الإنسانية الأصيلة، وتضخيم أصوات المجتمعات المهمشة، وإنشاء سرد بصري مؤثر يدعم التنمية المستدامة والأهداف الإنسانية.',
   about_p2:
     'أمتلك خبرة عملية في المجتمع المدني والمبادرات الشبابية، وأجمع بين المهارات البصرية والفهم العميق للمناصرة والتأثير الاجتماعي لتقديم محتوى يعكس حقاً المهمة الأساسية للمنظمات المحلية والعالمية.',
+  stat_years_val: '2+',
   stat_years: 'سنوات خبرة',
+  stat_projects_val: '57+',
   stat_projects: 'مشروع منجز',
+  stat_workshops_val: '7+',
   stat_workshops: 'ورشة تدريبية',
   portfolio_label: 'أعمال مختارة',
   portfolio_title: 'معرض الأعمال',
@@ -150,5 +153,6 @@ export const arTranslations: TranslationDictionary = {
   wallart_size_small: '50 × 70 سم (A2)',
   wallart_size_large: '70 × 100 سم (متحفي)',
   wallart_order_btn: 'طلب طباعة اللوحة عبر الواتساب',
+  footer_client_access: 'بوابة تسليم العملاء',
   footer_copy: '© 2026 Enaam Ali Osman. جميع الحقوق محفوظة.',
 };

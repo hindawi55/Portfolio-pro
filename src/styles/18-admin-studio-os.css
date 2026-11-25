@@ -170,7 +170,7 @@
   width: fit-content;
   padding-block: 6px;
   padding-inline: 14px;
-  border-radius: 9999px;
+  border-radius: 6px;
   background: rgba(var(--accent-rgb), 0.14);
   border: 1px solid rgba(var(--accent-rgb), 0.35);
   color: var(--accent);
@@ -298,7 +298,7 @@
   gap: 8px;
   min-height: 40px;
   padding-inline: 14px;
-  border-radius: 9999px;
+  border-radius: 10px;
   background: rgba(var(--accent-rgb), 0.1);
   border: 1px solid rgba(var(--accent-rgb), 0.25);
   color: var(--text-primary);
@@ -309,7 +309,7 @@
 .admin-return-site-btn {
   min-height: 44px;
   padding-inline: 16px;
-  border-radius: 9999px;
+  border-radius: 10px;
   background: rgba(var(--accent-rgb), 0.12);
   border: 1px solid rgba(var(--accent-rgb), 0.38);
   color: var(--accent);
@@ -410,7 +410,7 @@
   min-width: 24px;
   height: 24px;
   padding-inline: 7px;
-  border-radius: 9999px;
+  border-radius: 6px;
   background: var(--accent);
   color: #0b0e14;
   font-size: 0.75rem;
@@ -472,7 +472,7 @@
   gap: 8px;
   min-height: 36px;
   padding-inline: 14px;
-  border-radius: 9999px;
+  border-radius: 8px;
   font-size: var(--text-micro);
   font-weight: 700;
   border: 1px solid transparent;
@@ -531,7 +531,7 @@
 .admin-swatch-dot {
   width: 24px;
   height: 24px;
-  border-radius: 9999px;
+  border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
@@ -540,7 +540,7 @@
   font-size: 0.72rem;
   padding-block: 2px;
   padding-inline: 8px;
-  border-radius: 9999px;
+  border-radius: 6px;
   background: rgba(var(--accent-rgb), 0.12);
   color: var(--accent);
 }
@@ -951,7 +951,7 @@
   min-height: 44px;
   padding-block: 8px;
   padding-inline: 16px;
-  border-radius: 9999px;
+  border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--bg-card);
   color: var(--text-secondary);
@@ -1092,7 +1092,7 @@
   gap: 6px;
   padding-block: 4px;
   padding-inline: 10px;
-  border-radius: 9999px;
+  border-radius: 6px;
   font-size: 0.74rem;
   font-weight: 700;
   border: 1px solid transparent;

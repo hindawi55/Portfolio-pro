@@ -18,7 +18,8 @@ import { Contact } from './components/Contact';
 import { Footer } from './components/Footer';
 import { CinemaLightbox } from './components/CinemaLightbox';
 import { CVDossierModal } from './components/CVDossierModal';
-import { StudioManager } from './components/StudioManager';
+import { PrintableCVSheet } from './components/cv/PrintableCVSheet';
+import { ClientSessionRibbon } from './components/ClientSessionRibbon';
 import { ClientPortalHeader } from './components/ClientPortalHeader';
 import { AdminStudioModal } from './components/admin/AdminStudioModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -84,22 +85,47 @@ export const App: React.FC = () => {
   const [isClientIsolated, setIsClientIsolated] = useState<boolean>(false);
   const [isClientPortalOpen, setIsClientPortalOpen] = useState<boolean>(false);
   const [isCVDossierOpen, setIsCVDossierOpen] = useState<boolean>(false);
-  const [isStudioManagerOpen, setIsStudioManagerOpen] = useState<boolean>(false);
   const [isAdminStudioOpen, setIsAdminStudioOpen] = useState<boolean>(false);
 
-  const { layout, seo, getTranslation } = useSiteCMS();
-  const t = getTranslation(currentLang);
+  const { layout, seo } = useSiteCMS();
 
-  // Sync document language, direction, and dynamic White-Label SEO title
+  // Sync document language, direction, and dynamic White-Label SEO metadata
   useEffect(() => {
     document.documentElement.lang = currentLang;
     document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
     document.body.setAttribute('dir', currentLang === 'ar' ? 'rtl' : 'ltr');
-    const customTitle = currentLang === 'ar' ? seo.siteTitleAr : seo.siteTitleEn;
-    document.title = customTitle || translations[currentLang].pageTitle;
-  }, [currentLang, seo.siteTitleAr, seo.siteTitleEn]);
 
-  // Listen for hash and pathname triggers: #portal?pin=..., #studio or /studio, #cv-dossier
+    const customTitle = (currentLang === 'ar' ? seo.siteTitleAr : seo.siteTitleEn) || translations[currentLang].pageTitle;
+    const customDesc = (currentLang === 'ar' ? seo.metaDescriptionAr : seo.metaDescriptionEn) || '';
+    document.title = customTitle;
+
+    const updateMeta = (selector: string, content: string, attrName: 'name' | 'property', attrVal: string) => {
+      if (!content) return;
+      let el = document.querySelector<HTMLMetaElement>(selector);
+      if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute(attrName, attrVal);
+        document.head.appendChild(el);
+      }
+      el.setAttribute('content', content);
+    };
+
+    updateMeta('meta[name="description"]', customDesc, 'name', 'description');
+    updateMeta('meta[property="og:title"]', customTitle, 'property', 'og:title');
+    updateMeta('meta[property="og:description"]', customDesc, 'property', 'og:description');
+    if (seo.ogImageUrl) {
+      updateMeta('meta[property="og:image"]', seo.ogImageUrl, 'property', 'og:image');
+    }
+  }, [
+    currentLang,
+    seo.siteTitleAr,
+    seo.siteTitleEn,
+    seo.metaDescriptionAr,
+    seo.metaDescriptionEn,
+    seo.ogImageUrl,
+  ]);
+
+  // Listen for hash and pathname triggers: #portal?pin=..., /admin or /studio, #cv-dossier
   useEffect(() => {
     const handleNavigationRoutes = () => {
       safeRun(
@@ -109,14 +135,22 @@ export const App: React.FC = () => {
           const hash = window.location.hash || '';
           const path = window.location.pathname || '';
 
+          const isLegacyStudioRoute =
+            path === '/studio' || path.startsWith('/studio/') || hash.startsWith('#studio');
           const isAdminRoute =
-            path === '/admin' || path.startsWith('/admin/') || hash.startsWith('#admin');
+            isLegacyStudioRoute ||
+            path === '/admin' ||
+            path.startsWith('/admin/') ||
+            hash.startsWith('#admin');
+
+          if (isLegacyStudioRoute) {
+            history.replaceState(null, '', '/admin' + window.location.search);
+          }
+
           setIsAdminStudioOpen(isAdminRoute);
 
           if (!isAdminRoute) {
-            if (path === '/studio' || path.startsWith('/studio/') || hash.startsWith('#studio')) {
-              setIsStudioManagerOpen(true);
-            } else if (hash.startsWith('#cv-dossier')) {
+            if (hash.startsWith('#cv-dossier')) {
               setIsCVDossierOpen(true);
             } else if (hash.startsWith('#client-portal') || hash.startsWith('#portal')) {
               if (hash.includes('pin=')) {
@@ -215,48 +249,25 @@ export const App: React.FC = () => {
     <>
       {!isAdminStudioOpen && (
         <>
-          <Loader />
+          <Loader currentLang={currentLang} />
           <CustomCursor />
           <Particles />
 
           {/* Persistent Client Session Status Ribbon ONLY when browsing public site (eliminates duplicate header) */}
           {activeClientSession && !isClientIsolated && (
-            <div className="client-active-ribbon">
-              <div className="ribbon-inner">
-                <div className="ribbon-client-info">
-                  <span className="ribbon-pulse"></span>
-                  <i className="fas fa-user-shield"></i>
-                  <span className="ribbon-title">
-                    {currentLang === 'ar' ? 'جلسة عميل نشطة:' : 'Active Client Session:'}{' '}
-                    <strong>{currentLang === 'ar' ? activeClientSession.clientNameAr : activeClientSession.clientNameEn}</strong>
-                  </span>
-                </div>
-
-                <div className="ribbon-actions">
-                  <button
-                    type="button"
-                    className="ribbon-btn ribbon-btn-mode"
-                    onClick={() => setIsClientIsolated(!isClientIsolated)}
-                  >
-                    <i className={`fas ${isClientIsolated ? 'fa-globe' : 'fa-compress-arrows-alt'}`}></i>
-                    <span>{isClientIsolated ? t.portal_switch_public : t.portal_switch_isolated}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className="ribbon-btn ribbon-btn-logout"
-                    onClick={() => {
-                      setActiveClientSession(null);
-                      setIsClientIsolated(false);
-                      showToast(currentLang === 'ar' ? 'تم قفل جلسة العميل والخروج بأمان' : 'Client session locked');
-                    }}
-                  >
-                    <i className="fas fa-lock"></i>
-                    <span>{t.portal_lock_and_exit}</span>
-                  </button>
-                </div>
-              </div>
-            </div>
+            <ClientSessionRibbon
+              currentLang={currentLang}
+              session={activeClientSession}
+              isIsolated={isClientIsolated}
+              onToggleIsolated={() => setIsClientIsolated(!isClientIsolated)}
+              onLockAndExit={() => {
+                setActiveClientSession(null);
+                setIsClientIsolated(false);
+                showToast(
+                  currentLang === 'ar' ? 'تم قفل جلسة العميل والخروج بأمان' : 'Client session locked'
+                );
+              }}
+            />
           )}
 
           {activeClientSession && isClientIsolated ? (
@@ -277,6 +288,7 @@ export const App: React.FC = () => {
               currentLang={currentLang}
               onToggleLang={toggleLanguage}
               onOpenCVDossier={() => setIsCVDossierOpen(true)}
+              onOpenClientPortal={() => setIsClientPortalOpen(true)}
             />
           )}
         </>
@@ -340,6 +352,7 @@ export const App: React.FC = () => {
                         <CVSection
                           currentLang={currentLang}
                           onOpenFullDossier={() => setIsCVDossierOpen(true)}
+                          onShowToast={showToast}
                         />
                       </ErrorBoundary>
                     );
@@ -463,45 +476,7 @@ export const App: React.FC = () => {
         </ErrorBoundary>
       )}
 
-      {/* Developer / Photographer Studio Manager (/studio or #studio) */}
-      {isStudioManagerOpen && (
-        <ErrorBoundary
-          scope="modal"
-          moduleName="Studio Manager"
-          currentLang={currentLang}
-          onReset={() => setIsStudioManagerOpen(false)}
-        >
-          <StudioManager
-            currentLang={currentLang}
-            onShowToast={showToast}
-            onOpenClientSession={(session) => {
-              setIsStudioManagerOpen(false);
-              setActiveClientSession(session);
-              setIsClientIsolated(true);
-            }}
-            onClose={() => {
-              setIsStudioManagerOpen(false);
-              safeRun(
-                'App.Router',
-                'clearStudioHash',
-                () => {
-                  if (window.location.hash.startsWith('#studio')) {
-                    history.replaceState(
-                      null,
-                      '',
-                      window.location.pathname + window.location.search
-                    );
-                  }
-                },
-                undefined,
-                'warning'
-              );
-            }}
-          />
-        </ErrorBoundary>
-      )}
-
-      {/* Luxe Studio OS Cloud Admin Panel (/admin or #admin) */}
+      {/* Luxe Studio OS Cloud Admin Panel (/admin, /studio, or #admin) */}
       {isAdminStudioOpen && (
         <ErrorBoundary
           scope="modal"
@@ -561,6 +536,8 @@ export const App: React.FC = () => {
           />
         </ErrorBoundary>
       )}
+
+      {!isAdminStudioOpen && <PrintableCVSheet currentLang={currentLang} />}
 
       {toastMessage && (
         <div className="toast-notice" role="alert">

@@ -1,10 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Language } from '../../types';
 import { translations, TranslationDictionary } from '../../data/translations';
 import { useSiteCMS } from '../../context/SiteCMSContext';
-import { SiteContentOverrides, SiteLayoutConfig } from '../../types/cms';
-import { FALLBACK_IMAGE_URL, resolveAssetUrl } from '../../utils/assets';
-import { optimizePhotoFile } from '../../utils/mediaExif';
+import { SiteContentOverrides } from '../../types/cms';
+import { AdminPortraitStudioCard } from './AdminPortraitStudioCard';
 
 interface AdminContentPanelProps {
   currentLang: Language;
@@ -36,11 +35,12 @@ const CONTENT_GROUPS: ContentGroup[] = [
       { key: 'hero_subtitle', labelAr: 'الوصف الافتتاحي', labelEn: 'Hero Subtitle', multiline: true },
       { key: 'btn_works', labelAr: 'زر الأعمال الرئيسي', labelEn: 'Primary CTA Button' },
       { key: 'btn_contact', labelAr: 'زر التواصل الثانوي', labelEn: 'Secondary CTA Button' },
+      { key: 'scroll', labelAr: 'نص التمرير السفلي', labelEn: 'Scroll Indicator Text' },
     ],
   },
   {
     id: 'about',
-    labelAr: 'نبذة عن المصورة والبورتريه (About)',
+    labelAr: 'نبذة عن المصورة والإحصائيات (About)',
     labelEn: 'About, Portrait & Stats',
     keys: [
       { key: 'about_label', labelAr: 'وسم القسم', labelEn: 'Section Label' },
@@ -53,8 +53,11 @@ const CONTENT_GROUPS: ContentGroup[] = [
       { key: 'about_heading', labelAr: 'العنوان الفرعي', labelEn: 'Bio Heading' },
       { key: 'about_p1', labelAr: 'الفقرة الأولى', labelEn: 'Bio Paragraph 1', multiline: true },
       { key: 'about_p2', labelAr: 'الفقرة الثانية', labelEn: 'Bio Paragraph 2', multiline: true },
+      { key: 'stat_years_val', labelAr: 'رقم سنوات الخبرة', labelEn: 'Stat: Years Number' },
       { key: 'stat_years', labelAr: 'تسمية سنوات الخبرة', labelEn: 'Stat: Years Label' },
+      { key: 'stat_projects_val', labelAr: 'رقم المشاريع المنجزة', labelEn: 'Stat: Projects Number' },
       { key: 'stat_projects', labelAr: 'تسمية المشاريع', labelEn: 'Stat: Projects Label' },
+      { key: 'stat_workshops_val', labelAr: 'رقم الورش التدريبية', labelEn: 'Stat: Workshops Number' },
       { key: 'stat_workshops', labelAr: 'تسمية الورش', labelEn: 'Stat: Workshops Label' },
     ],
   },
@@ -65,10 +68,17 @@ const CONTENT_GROUPS: ContentGroup[] = [
     keys: [
       { key: 'cv_label', labelAr: 'وسم السيرة الذاتية', labelEn: 'CV Label' },
       { key: 'cv_title', labelAr: 'عنوان السيرة الذاتية', labelEn: 'CV Title' },
+      { key: 'cv_desc', labelAr: 'وصف السيرة الذاتية', labelEn: 'CV Description', multiline: true },
       { key: 'btn_download_cv', labelAr: 'زر تحميل PDF', labelEn: 'CV Download Button' },
+      { key: 'btn_print_cv', labelAr: 'زر طباعة السيرة', labelEn: 'CV Print Button' },
       { key: 'portfolio_label', labelAr: 'وسم المعرض', labelEn: 'Portfolio Label' },
       { key: 'portfolio_title', labelAr: 'عنوان المعرض', labelEn: 'Portfolio Title' },
       { key: 'portfolio_desc', labelAr: 'وصف المعرض', labelEn: 'Portfolio Description', multiline: true },
+      { key: 'filter_all', labelAr: 'فلتر: الكل', labelEn: 'Filter: All' },
+      { key: 'filter_humanitarian', labelAr: 'فلتر: إنساني', labelEn: 'Filter: Humanitarian' },
+      { key: 'filter_community', labelAr: 'فلتر: مجتمعي', labelEn: 'Filter: Community' },
+      { key: 'filter_documentary', labelAr: 'فلتر: وثائقي', labelEn: 'Filter: Documentary' },
+      { key: 'filter_workshops', labelAr: 'فلتر: ورش عمل', labelEn: 'Filter: Workshops' },
     ],
   },
   {
@@ -76,12 +86,18 @@ const CONTENT_GROUPS: ContentGroup[] = [
     labelAr: 'الرسالة والخدمات (Mission & Services)',
     labelEn: 'Mission & Services',
     keys: [
+      { key: 'mission_label', labelAr: 'وسم قسم الرسالة', labelEn: 'Mission Label' },
       { key: 'mission_title', labelAr: 'عنوان الرسالة', labelEn: 'Mission Title' },
       { key: 'mission_desc', labelAr: 'وصف الرسالة', labelEn: 'Mission Description', multiline: true },
       { key: 'mission_1_title', labelAr: 'الركيزة 1 — العنوان', labelEn: 'Mission 1 Title' },
       { key: 'mission_1_desc', labelAr: 'الركيزة 1 — الوصف', labelEn: 'Mission 1 Desc', multiline: true },
       { key: 'mission_2_title', labelAr: 'الركيزة 2 — العنوان', labelEn: 'Mission 2 Title' },
       { key: 'mission_2_desc', labelAr: 'الركيزة 2 — الوصف', labelEn: 'Mission 2 Desc', multiline: true },
+      { key: 'mission_3_title', labelAr: 'الركيزة 3 — العنوان', labelEn: 'Mission 3 Title' },
+      { key: 'mission_3_desc', labelAr: 'الركيزة 3 — الوصف', labelEn: 'Mission 3 Desc', multiline: true },
+      { key: 'mission_4_title', labelAr: 'الركيزة 4 — العنوان', labelEn: 'Mission 4 Title' },
+      { key: 'mission_4_desc', labelAr: 'الركيزة 4 — الوصف', labelEn: 'Mission 4 Desc', multiline: true },
+      { key: 'services_label', labelAr: 'وسم قسم الخدمات', labelEn: 'Services Label' },
       { key: 'services_title', labelAr: 'عنوان الخدمات', labelEn: 'Services Title' },
       { key: 'services_desc', labelAr: 'وصف الخدمات', labelEn: 'Services Description', multiline: true },
       { key: 'service_1_title', labelAr: 'الخدمة 1 — العنوان', labelEn: 'Service 1 Title' },
@@ -90,18 +106,34 @@ const CONTENT_GROUPS: ContentGroup[] = [
       { key: 'service_2_desc', labelAr: 'الخدمة 2 — الوصف', labelEn: 'Service 2 Desc', multiline: true },
       { key: 'service_3_title', labelAr: 'الخدمة 3 — العنوان', labelEn: 'Service 3 Title' },
       { key: 'service_3_desc', labelAr: 'الخدمة 3 — الوصف', labelEn: 'Service 3 Desc', multiline: true },
+      { key: 'service_4_title', labelAr: 'الخدمة 4 — العنوان', labelEn: 'Service 4 Title' },
+      { key: 'service_4_desc', labelAr: 'الخدمة 4 — الوصف', labelEn: 'Service 4 Desc', multiline: true },
+      { key: 'service_5_title', labelAr: 'الخدمة 5 — العنوان', labelEn: 'Service 5 Title' },
+      { key: 'service_5_desc', labelAr: 'الخدمة 5 — الوصف', labelEn: 'Service 5 Desc', multiline: true },
+      { key: 'service_6_title', labelAr: 'الخدمة 6 — العنوان', labelEn: 'Service 6 Title' },
+      { key: 'service_6_desc', labelAr: 'الخدمة 6 — الوصف', labelEn: 'Service 6 Desc', multiline: true },
     ],
   },
   {
     id: 'contact_footer',
     labelAr: 'التواصل والتذييل (Contact & Footer)',
-    labelEn: 'Contact & Footer',
+    labelEn: 'Contact, Booking & Footer',
     keys: [
+      { key: 'contact_label', labelAr: 'وسم قسم التواصل', labelEn: 'Contact Label' },
       { key: 'contact_title', labelAr: 'عنوان التواصل', labelEn: 'Contact Title' },
       { key: 'contact_desc', labelAr: 'وصف التواصل', labelEn: 'Contact Description', multiline: true },
       { key: 'contact_heading', labelAr: 'عنوان عمود المعلومات', labelEn: 'Contact Heading' },
       { key: 'contact_p', labelAr: 'فقرة التواصل', labelEn: 'Contact Paragraph', multiline: true },
+      { key: 'contact_email_label', labelAr: 'تسمية البريد', labelEn: 'Email Label' },
+      { key: 'contact_phone_label', labelAr: 'تسمية الواتساب/الهاتف', labelEn: 'WhatsApp/Phone Label' },
+      { key: 'contact_location_label', labelAr: 'تسمية الموقع', labelEn: 'Location Label' },
       { key: 'contact_location', labelAr: 'الموقع الجغرافي', labelEn: 'Location Text' },
+      { key: 'form_submit', labelAr: 'زر إرسال الرسالة', labelEn: 'Submit Button Text' },
+      { key: 'btn_send_whatsapp', labelAr: 'زر الإرسال عبر واتساب', labelEn: 'WhatsApp Button Text' },
+      { key: 'portal_label', labelAr: 'وسم بوابة العملاء', labelEn: 'Client Portal Label' },
+      { key: 'portal_title', labelAr: 'عنوان بوابة العملاء', labelEn: 'Client Portal Title' },
+      { key: 'portal_desc', labelAr: 'وصف بوابة العملاء', labelEn: 'Client Portal Desc', multiline: true },
+      { key: 'footer_client_access', labelAr: 'نص زر بوابة العملاء بالتذييل', labelEn: 'Footer Client Access Button' },
       { key: 'footer_copy', labelAr: 'نص حقوق الملكية بالتذييل', labelEn: 'Footer Copyright Text' },
     ],
   },
@@ -111,40 +143,17 @@ export const AdminContentPanel: React.FC<AdminContentPanelProps> = ({
   currentLang,
   onShowToast,
 }) => {
-  const { content, saveContent, layout, saveLayout } = useSiteCMS();
+  const { content, saveContent } = useSiteCMS();
   const [draft, setDraft] = useState<SiteContentOverrides>(content);
-  const [portraitDraft, setPortraitDraft] = useState<{
-    portraitUrl: string;
-    portraitFocusY: number;
-    portraitZoom: number;
-    portraitDefaultMode: 'color' | 'mono';
-  }>({
-    portraitUrl: layout.portraitUrl || '',
-    portraitFocusY: typeof layout.portraitFocusY === 'number' ? layout.portraitFocusY : 38,
-    portraitZoom: typeof layout.portraitZoom === 'number' ? layout.portraitZoom : 1.06,
-    portraitDefaultMode: layout.portraitDefaultMode || 'color',
-  });
   const [activeGroupId, setActiveGroupId] = useState<string>(CONTENT_GROUPS[0].id);
   const [search, setSearch] = useState('');
   const [saving, setSaving] = useState(false);
-  const [savingPortrait, setSavingPortrait] = useState(false);
-  const [uploadingPortrait, setUploadingPortrait] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const isAr = currentLang === 'ar';
 
   useEffect(() => {
     setDraft(content);
   }, [content]);
-
-  useEffect(() => {
-    setPortraitDraft({
-      portraitUrl: layout.portraitUrl || '',
-      portraitFocusY: typeof layout.portraitFocusY === 'number' ? layout.portraitFocusY : 38,
-      portraitZoom: typeof layout.portraitZoom === 'number' ? layout.portraitZoom : 1.06,
-      portraitDefaultMode: layout.portraitDefaultMode || 'color',
-    });
-  }, [layout]);
 
   const activeGroup = useMemo(
     () => CONTENT_GROUPS.find((g) => g.id === activeGroupId) || CONTENT_GROUPS[0],
@@ -186,68 +195,6 @@ export const AdminContentPanel: React.FC<AdminContentPanelProps> = ({
     });
   };
 
-  const handlePortraitUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploadingPortrait(true);
-    try {
-      // Compress portrait cleanly so it stays light (~80-160KB) and safe for Firestore
-      const optimized = await optimizePhotoFile(file, 960, 0.8);
-      if (optimized.sizeKb > 420) {
-        const tighter = await optimizePhotoFile(file, 760, 0.72);
-        setPortraitDraft((prev) => ({ ...prev, portraitUrl: tighter.dataUrl }));
-        onShowToast(
-          isAr
-            ? `تم تجهيز الصورة وضغطها تلقائياً (${tighter.sizeKb} KB). اضغط «حفظ إعدادات البورتريه» للنشر.`
-            : `Portrait optimized (${tighter.sizeKb} KB). Click "Save Portrait Settings" to publish.`
-        );
-      } else {
-        setPortraitDraft((prev) => ({ ...prev, portraitUrl: optimized.dataUrl }));
-        onShowToast(
-          isAr
-            ? `تم تجهيز الصورة الشخصية (${optimized.sizeKb} KB). اضغط «حفظ إعدادات البورتريه» للنشر.`
-            : `Portrait ready (${optimized.sizeKb} KB). Click "Save Portrait Settings" to publish.`
-        );
-      }
-    } catch {
-      onShowToast(
-        isAr
-          ? 'تعذّر قراءة ملف الصورة. تأكد من اختيار صورة JPG أو PNG أو WebP صالحة.'
-          : 'Could not process image file. Please pick a valid JPG, PNG, or WebP.'
-      );
-    } finally {
-      setUploadingPortrait(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
-
-  const handleSavePortrait = async () => {
-    setSavingPortrait(true);
-    try {
-      const nextLayout: SiteLayoutConfig = {
-        ...layout,
-        portraitUrl: portraitDraft.portraitUrl.trim(),
-        portraitFocusY: portraitDraft.portraitFocusY,
-        portraitZoom: portraitDraft.portraitZoom,
-        portraitDefaultMode: portraitDraft.portraitDefaultMode,
-      };
-      await saveLayout(nextLayout);
-      onShowToast(
-        isAr
-          ? 'تم حفظ الصورة الشخصية وإعدادات القص والعدسة السحابية بنجاح.'
-          : 'Portrait photo, focal crop, and film mode published live to cloud.'
-      );
-    } catch {
-      onShowToast(
-        isAr
-          ? 'تعذّر حفظ إعدادات الصورة الشخصية. تأكد من حجم الصورة أو صلاحية الإدارة.'
-          : 'Failed to save portrait settings to cloud.'
-      );
-    } finally {
-      setSavingPortrait(false);
-    }
-  };
-
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -255,7 +202,7 @@ export const AdminContentPanel: React.FC<AdminContentPanelProps> = ({
       await saveContent(draft);
       onShowToast(
         isAr
-          ? 'تم حفظ كافة التعديلات النصية الحرة وتحديث الموقع حياً بنجاح.'
+          ? 'تم حفظ كافة التعديلات النصية الشاملة وتحديث الموقع حياً بنجاح.'
           : 'All bilingual content overrides published live to cloud.'
       );
     } catch {
@@ -267,264 +214,27 @@ export const AdminContentPanel: React.FC<AdminContentPanelProps> = ({
     }
   };
 
-  const previewImgSrc = portraitDraft.portraitUrl.trim()
-    ? resolveAssetUrl(portraitDraft.portraitUrl.trim())
-    : FALLBACK_IMAGE_URL;
-
   return (
     <div className="admin-panel-stack">
-      {/* Editorial Portrait Studio: Live Upload, Focal Crop, Zoom & Default Darkroom Film Mode */}
-      <section className="admin-card-group">
-        <div className="admin-card-group-head">
-          <div>
-            <h3>
-              {isAr
-                ? 'استوديو الصورة الشخصية والقص الذهبي (Portrait & Focal Studio)'
-                : 'Editorial Portrait & Focal Framing Studio'}
-            </h3>
-            <p>
-              {isAr
-                ? 'ارفع صورة شخصية جديدة أو عدّل نقطة التركيز والتكبير مع معاينة حية لخطوط الأثلاث الذهبية قبل النشر.'
-                : 'Upload a custom portrait or fine-tune vertical focal alignment, zoom, and default film mode with live Rule-of-Thirds preview.'}
-            </p>
-          </div>
-        </div>
+      <AdminPortraitStudioCard currentLang={currentLang} onShowToast={onShowToast} />
 
-        <div className="admin-portrait-studio">
-          {/* Live 4:5 Rule-of-Thirds Preview */}
-          <div className="admin-portrait-preview-col">
-            <div className="admin-portrait-preview-frame">
-              <img
-                src={previewImgSrc}
-                alt={isAr ? 'معاينة البورتريه الشخصي' : 'Portrait Framing Preview'}
-                className={`admin-portrait-preview-img ${
-                  portraitDraft.portraitDefaultMode === 'mono' ? 'is-mono' : ''
-                }`}
-                style={{
-                  objectPosition: `50% ${portraitDraft.portraitFocusY}%`,
-                  transformOrigin: `50% ${portraitDraft.portraitFocusY}%`,
-                  transform: `scale(${portraitDraft.portraitZoom})`,
-                }}
-                referrerPolicy="no-referrer"
-                onError={(e) => {
-                  const el = e.currentTarget;
-                  if (el.src !== FALLBACK_IMAGE_URL) {
-                    el.onerror = null;
-                    el.src = FALLBACK_IMAGE_URL;
-                  }
-                }}
-              />
-              {/* Rule-of-Thirds Guide Lines for Golden-Ratio Eye Alignment */}
-              <div className="admin-portrait-thirds" aria-hidden="true">
-                <span className="apt-v1"></span>
-                <span className="apt-v2"></span>
-                <span className="apt-h1"></span>
-                <span className="apt-h2"></span>
-              </div>
-              <div className="admin-portrait-preview-bar" aria-hidden="true">
-                <span>
-                  Y: {portraitDraft.portraitFocusY}% · {portraitDraft.portraitZoom.toFixed(2)}×
-                </span>
-                <span>{portraitDraft.portraitDefaultMode === 'mono' ? 'MONO' : 'COLOR'}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Interactive Controls */}
-          <div className="admin-portrait-controls-col">
-            <div className="admin-portrait-upload-row">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={handlePortraitUpload}
-                style={{ display: 'none' }}
-              />
-              <button
-                type="button"
-                className="admin-btn-secondary"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadingPortrait}
-              >
-                <i className={`fas ${uploadingPortrait ? 'fa-spinner fa-spin' : 'fa-upload'}`}></i>
-                <span>
-                  {uploadingPortrait
-                    ? isAr
-                      ? 'جاري ضغط وتجهيز الصورة...'
-                      : 'Optimizing Portrait...'
-                    : isAr
-                    ? 'رفع صورة شخصية من جهازك'
-                    : 'Upload Portrait Photo'}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                className="admin-btn-ghost admin-btn-sm"
-                onClick={() =>
-                  setPortraitDraft({
-                    portraitUrl: '',
-                    portraitFocusY: 38,
-                    portraitZoom: 1.06,
-                    portraitDefaultMode: 'color',
-                  })
-                }
-              >
-                <i className="fas fa-undo"></i>
-                <span>{isAr ? 'استعادة الافتراضي' : 'Reset Default'}</span>
-              </button>
-            </div>
-
-            <div className="admin-field">
-              <label>
-                {isAr
-                  ? 'أو رابط صورة مباشر (HTTPS / مسار محلي)'
-                  : 'Or Direct Portrait Image URL (HTTPS / Local Path)'}
-              </label>
-              <input
-                type="text"
-                dir="ltr"
-                placeholder="https://... or images/1.jpg"
-                value={
-                  portraitDraft.portraitUrl.startsWith('data:')
-                    ? ''
-                    : portraitDraft.portraitUrl
-                }
-                onChange={(e) =>
-                  setPortraitDraft((prev) => ({ ...prev, portraitUrl: e.target.value }))
-                }
-              />
-              {portraitDraft.portraitUrl.startsWith('data:') && (
-                <small className="admin-field-hint">
-                  {isAr
-                    ? '✓ تم تحميل صورة مخصصة مضغوطة جاهزة للنشر السحابي.'
-                    : '✓ Optimized custom uploaded portrait attached and ready to publish.'}
-                </small>
-              )}
-            </div>
-
-            <div className="admin-slider-row">
-              <div className="admin-slider-head">
-                <label htmlFor="portrait-focus-y">
-                  {isAr
-                    ? 'نقطة التركيز الرأسية (ارفع القيمة لتقليص الفراغ فوق الرأس)'
-                    : 'Vertical Focal Alignment (Higher trims top headroom)'}
-                </label>
-                <strong className="admin-tabular">{portraitDraft.portraitFocusY}%</strong>
-              </div>
-              <input
-                id="portrait-focus-y"
-                type="range"
-                min={0}
-                max={100}
-                step={1}
-                value={portraitDraft.portraitFocusY}
-                onChange={(e) =>
-                  setPortraitDraft((prev) => ({
-                    ...prev,
-                    portraitFocusY: Number(e.target.value),
-                  }))
-                }
-              />
-            </div>
-
-            <div className="admin-slider-row">
-              <div className="admin-slider-head">
-                <label htmlFor="portrait-zoom">
-                  {isAr ? 'درجة التكبير والقص التحريري (Editorial Zoom)' : 'Editorial Crop Zoom'}
-                </label>
-                <strong className="admin-tabular">{portraitDraft.portraitZoom.toFixed(2)}×</strong>
-              </div>
-              <input
-                id="portrait-zoom"
-                type="range"
-                min={1}
-                max={1.45}
-                step={0.01}
-                value={portraitDraft.portraitZoom}
-                onChange={(e) =>
-                  setPortraitDraft((prev) => ({
-                    ...prev,
-                    portraitZoom: Number(e.target.value),
-                  }))
-                }
-              />
-            </div>
-
-            <div className="admin-field">
-              <label>
-                {isAr
-                  ? 'وضع الفيلم الافتراضي للزوار (Default Darkroom Mode)'
-                  : 'Default Visitor Darkroom Mode'}
-              </label>
-              <div className="admin-pill-strip">
-                <button
-                  type="button"
-                  className={`admin-sub-pill ${
-                    portraitDraft.portraitDefaultMode === 'color' ? 'active' : ''
-                  }`}
-                  onClick={() =>
-                    setPortraitDraft((prev) => ({ ...prev, portraitDefaultMode: 'color' }))
-                  }
-                >
-                  {isAr ? 'ألوان طبيعية دافئة (Color)' : 'Natural Editorial Color'}
-                </button>
-                <button
-                  type="button"
-                  className={`admin-sub-pill ${
-                    portraitDraft.portraitDefaultMode === 'mono' ? 'active' : ''
-                  }`}
-                  onClick={() =>
-                    setPortraitDraft((prev) => ({ ...prev, portraitDefaultMode: 'mono' }))
-                  }
-                >
-                  {isAr ? 'أبيض وأسود وثائقي (Leica Mono)' : 'Leica Monochrome B&W'}
-                </button>
-              </div>
-            </div>
-
-            <div className="admin-save-bar" style={{ justifyContent: 'flex-start', paddingTop: 4 }}>
-              <button
-                type="button"
-                className="admin-btn-primary"
-                onClick={handleSavePortrait}
-                disabled={savingPortrait}
-              >
-                <i className={`fas ${savingPortrait ? 'fa-spinner fa-spin' : 'fa-camera'}`}></i>
-                <span>
-                  {savingPortrait
-                    ? isAr
-                      ? 'جاري حفظ البورتريه...'
-                      : 'Publishing Portrait...'
-                    : isAr
-                    ? 'حفظ إعدادات البورتريه في السحابة'
-                    : 'Save Portrait Settings to Cloud'}
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Bilingual Free Content Editor */}
       <form onSubmit={handleSave} className="admin-panel-stack">
         <section className="admin-card-group">
           <div className="admin-card-group-head">
             <div>
               <h3>
                 {isAr
-                  ? 'محرر التعديل الحر الشامل (من الهيدر إلى التذييل)'
-                  : 'Free Visual Content Editor (Header to Footer)'}
+                  ? 'محرر التعديل الحر الشامل (100% من الهيدر إلى التذييل)'
+                  : 'Complete Visual Content Editor (Header to Footer)'}
               </h3>
               <p>
                 {isAr
-                  ? 'حرّر أي عنوان أو زر أو فقرة باللغتين العربية والإنجليزية جنباً إلى جنب مع إمكانية استعادة النص الأصلي.'
-                  : 'Edit any headline, button, or paragraph side-by-side in Arabic and English with instant 1-click default reset.'}
+                  ? 'حرّر أي عنوان أو إحصائية أو خدمة أو زر أو نص تذييل باللغتين مع إمكانية الاستعادة الفورية.'
+                  : 'Edit any headline, stat number, mission pillar, service, button, or footer line side-by-side.'}
               </p>
             </div>
           </div>
 
-          {/* Search & Group Filter Chips */}
           <div className="admin-field">
             <input
               type="search"
@@ -553,7 +263,6 @@ export const AdminContentPanel: React.FC<AdminContentPanelProps> = ({
             </div>
           )}
 
-          {/* Bilingual Side-by-Side Fields */}
           <div className="admin-bilingual-list">
             {visibleFields.map((field) => {
               const arVal =

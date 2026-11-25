@@ -27,7 +27,7 @@
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(226, 177, 112, 0.35);
-  border-radius: 9999px;
+  border-radius: 12px;
   padding: 4px 10px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65);
   transition: all 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -54,7 +54,7 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  border-radius: 9999px;
+  border-radius: 8px;
   transition: all 0.22s ease;
   white-space: nowrap;
 }
@@ -247,7 +247,7 @@
 .exif-close {
   width: 30px;
   height: 30px;
-  border-radius: 50%;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border);
   color: var(--text-muted);
@@ -370,7 +370,7 @@
   width: 44px;
   height: 44px;
   min-width: 44px;
-  border-radius: 50%;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.16);
   color: #ffffff;
@@ -530,7 +530,7 @@
   background: rgba(0, 0, 0, 0.6);
   border: 1px solid rgba(226, 177, 112, 0.25);
   padding: 5px 16px;
-  border-radius: 9999px;
+  border-radius: 8px;
   margin-top: 14px;
 }
 
@@ -581,7 +581,7 @@
   background: rgba(22, 26, 35, 0.8);
   border: 1px solid var(--border);
   color: var(--text-secondary);
-  border-radius: 20px;
+  border-radius: 10px;
   padding: 8px 16px;
   font-family: 'Cairo', sans-serif;
   font-size: 0.82rem;
@@ -590,7 +590,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  min-height: 40px;
+  min-height: 44px;
   transition: all 0.25s ease;
   white-space: nowrap;
 }
@@ -605,7 +605,7 @@
 .dot {
   width: 10px;
   height: 10px;
-  border-radius: 50%;
+  border-radius: 3px;
   display: inline-block;
 }
 
@@ -635,7 +635,7 @@
   font-family: 'Cairo', sans-serif;
   font-size: 0.92rem;
   font-weight: 700;
-  border-radius: 30px;
+  border-radius: 10px;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
@@ -689,7 +689,7 @@
   color: #cbd5e1;
   width: 32px;
   height: 32px;
-  border-radius: 50%;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;

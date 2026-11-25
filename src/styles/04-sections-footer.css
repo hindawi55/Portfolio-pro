@@ -138,7 +138,7 @@ body[dir="ltr"] .mission-card::before {
   width: 70px;
   height: 70px;
   border: 1px solid var(--accent);
-  border-radius: 50%;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -341,7 +341,7 @@ body[dir="ltr"] .contact-item {
   width: 45px;
   height: 45px;
   border: 1px solid var(--border);
-  border-radius: 50%;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -79,10 +79,15 @@ export const Portfolio: React.FC<PortfolioProps> = ({ currentLang, onOpenLightbo
       {/* Series Cards Container */}
       <div className="portfolio-series-container" id="portfolioSeriesContainer">
         {filteredSeries.map((series) => {
-          const currentIndex = getActiveIndex(series.id);
-          const currentPhoto = series.photos[currentIndex] || series.photos[0];
-          const photoUrl = getPhotoUrl(series.folder, currentPhoto.file);
-          const caption = currentLang === 'ar' ? currentPhoto.captionAr : currentPhoto.captionEn;
+          const safeMax = series.photos.length;
+          const currentIndex = safeMax > 0 ? Math.min(getActiveIndex(series.id), safeMax - 1) : 0;
+          const currentPhoto = safeMax > 0 ? series.photos[currentIndex] || series.photos[0] : null;
+          const photoUrl = currentPhoto ? getPhotoUrl(series.folder, currentPhoto.file) : '';
+          const caption = currentPhoto
+            ? currentLang === 'ar'
+              ? currentPhoto.captionAr
+              : currentPhoto.captionEn
+            : '';
           const title = currentLang === 'ar' ? series.titleAr : series.titleEn;
           const subtitle = currentLang === 'ar' ? series.subtitleAr : series.subtitleEn;
           const location = currentLang === 'ar' ? series.locationAr : series.locationEn;
@@ -112,65 +117,97 @@ export const Portfolio: React.FC<PortfolioProps> = ({ currentLang, onOpenLightbo
                 </div>
               </div>
 
-              {/* Main Viewing Stage (Pure Unobstructed Artwork - Protected from accidental click triggers) */}
-              <div className="series-viewer-stage">
-                <img
-                  className="series-main-img"
-                  src={photoUrl}
-                  alt={caption}
-                  loading="eager"
-                  onError={(e) => {
-                    const target = e.currentTarget;
-                    target.onerror = null;
-                    target.src = FALLBACK_IMAGE_URL;
+              {!currentPhoto ? (
+                <div
+                  className="series-viewer-stage"
+                  style={{
+                    minHeight: '220px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '32px',
+                    color: 'var(--text-muted)',
                   }}
-                />
-              </div>
-
-              {/* Dedicated Pro Photo Action Toolbar (Positioned Cleanly Beneath Photo) */}
-              <div className="series-photo-actionbar" onClick={(e) => e.stopPropagation()}>
-                <div className="photo-action-capsule">
-                  <button
-                    type="button"
-                    className="actionbar-btn btn-tool-wallart"
-                    onClick={() => onOpenLightbox(series, currentIndex, 'wallart')}
-                    title={currentLang === 'ar' ? 'معاينة كلوحة جدارية في صالة معيشة فاخرة' : 'Preview as framed wall art'}
-                  >
-                    <i className="fas fa-couch"></i>
-                    <span>{currentLang === 'ar' ? 'جدارية' : 'Wall Art'}</span>
-                  </button>
-
-                  <div className="actionbar-divider"></div>
-
-                  <button
-                    type="button"
-                    className={`actionbar-btn btn-tool-exif ${inlineExifSeriesId === series.id ? 'active' : ''}`}
-                    onClick={() =>
-                      setInlineExifSeriesId((prev) => (prev === series.id ? null : series.id))
-                    }
-                    title={currentLang === 'ar' ? 'بيانات الكاميرا والعدسة EXIF (عرض فوري)' : 'Toggle camera EXIF metadata'}
-                    aria-expanded={inlineExifSeriesId === series.id}
-                  >
-                    <i className="fas fa-camera"></i>
-                    <span>EXIF</span>
-                  </button>
-
-                  <div className="actionbar-divider"></div>
-
-                  <button
-                    type="button"
-                    className="actionbar-btn actionbar-btn-icon btn-tool-expand"
-                    onClick={() => onOpenLightbox(series, currentIndex)}
-                    title={t.fullscreen_title}
-                    aria-label={t.fullscreen_title}
-                  >
-                    <i className="fas fa-expand"></i>
-                  </button>
+                >
+                  <span>
+                    {currentLang === 'ar'
+                      ? 'لا توجد صور منشورة في هذه السلسلة بعد.'
+                      : 'No photographs published in this series yet.'}
+                  </span>
                 </div>
-              </div>
+              ) : (
+                <>
+                  {/* Main Viewing Stage */}
+                  <div className="series-viewer-stage">
+                    <img
+                      className="series-main-img"
+                      src={photoUrl}
+                      alt={caption}
+                      loading="eager"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        target.onerror = null;
+                        target.src = FALLBACK_IMAGE_URL;
+                      }}
+                    />
+                  </div>
 
-              {/* Inline Collapsible Technical EXIF Panel (Non-intrusive, no modal jump) */}
-              {inlineExifSeriesId === series.id && (
+                  {/* Dedicated Pro Photo Action Toolbar */}
+                  <div className="series-photo-actionbar" onClick={(e) => e.stopPropagation()}>
+                    <div className="photo-action-capsule">
+                      <button
+                        type="button"
+                        className="actionbar-btn btn-tool-wallart"
+                        onClick={() => onOpenLightbox(series, currentIndex, 'wallart')}
+                        title={
+                          currentLang === 'ar'
+                            ? 'معاينة كلوحة جدارية في صالة معيشة فاخرة'
+                            : 'Preview as framed wall art'
+                        }
+                      >
+                        <i className="fas fa-couch"></i>
+                        <span>{currentLang === 'ar' ? 'جدارية' : 'Wall Art'}</span>
+                      </button>
+
+                      <div className="actionbar-divider"></div>
+
+                      <button
+                        type="button"
+                        className={`actionbar-btn btn-tool-exif ${
+                          inlineExifSeriesId === series.id ? 'active' : ''
+                        }`}
+                        onClick={() =>
+                          setInlineExifSeriesId((prev) => (prev === series.id ? null : series.id))
+                        }
+                        title={
+                          currentLang === 'ar'
+                            ? 'بيانات الكاميرا والعدسة EXIF (عرض فوري)'
+                            : 'Toggle camera EXIF metadata'
+                        }
+                        aria-expanded={inlineExifSeriesId === series.id}
+                      >
+                        <i className="fas fa-camera"></i>
+                        <span>EXIF</span>
+                      </button>
+
+                      <div className="actionbar-divider"></div>
+
+                      <button
+                        type="button"
+                        className="actionbar-btn actionbar-btn-icon btn-tool-expand"
+                        onClick={() => onOpenLightbox(series, currentIndex)}
+                        title={t.fullscreen_title}
+                        aria-label={t.fullscreen_title}
+                      >
+                        <i className="fas fa-expand"></i>
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Inline Collapsible Technical EXIF Panel */}
+              {currentPhoto && inlineExifSeriesId === series.id && (
                 <div className="series-inline-exif-drawer" role="region" aria-label="Camera EXIF">
                   <div className="inline-exif-header">
                     <div className="inline-exif-title">
@@ -244,65 +281,86 @@ export const Portfolio: React.FC<PortfolioProps> = ({ currentLang, onOpenLightbo
                 </div>
               )}
 
-              {/* Series Navigation Controls */}
-              <div className="series-controls">
-                <button
-                  className="btn-series-nav btn-prev"
-                  onClick={() => handleSelectPhoto(series.id, currentIndex - 1, series.photos.length)}
-                  aria-label={t.btn_prev}
-                >
-                  <i className={`fas ${currentLang === 'ar' ? 'fa-arrow-right' : 'fa-arrow-left'}`}></i>
-                  <span className="nav-text">{t.btn_prev}</span>
-                </button>
-                <div className="series-counter-big">
-                  <span className="current-num">{String(currentIndex + 1).padStart(2, '0')}</span> /{' '}
-                  <span className="total-num">{String(series.photos.length).padStart(2, '0')}</span>
-                </div>
-                <button
-                  className="btn-series-nav btn-next"
-                  onClick={() => handleSelectPhoto(series.id, currentIndex + 1, series.photos.length)}
-                  aria-label={t.btn_next}
-                >
-                  <span className="nav-text">{t.btn_next}</span>
-                  <i className={`fas ${currentLang === 'ar' ? 'fa-arrow-left' : 'fa-arrow-right'}`}></i>
-                </button>
-              </div>
-
-              {/* Filmstrip Thumbnails */}
-              <div className="series-filmstrip" role="tablist">
-                {series.photos.map((photo, pIdx) => (
-                  <div
-                    key={pIdx}
-                    className={`series-thumb-item ${pIdx === currentIndex ? 'active' : ''}`}
-                    onClick={() => handleSelectPhoto(series.id, pIdx, series.photos.length)}
-                    title={currentLang === 'ar' ? photo.captionAr : photo.captionEn}
-                  >
-                    <img
-                      className="series-thumb-img"
-                      src={getPhotoUrl(series.folder, photo.file)}
-                      alt={currentLang === 'ar' ? photo.captionAr : photo.captionEn}
-                      loading="lazy"
-                      onError={(e) => {
-                        const target = e.currentTarget;
-                        target.onerror = null;
-                        target.src = FALLBACK_IMAGE_URL;
-                      }}
-                    />
+              {currentPhoto && (
+                <>
+                  {/* Series Navigation Controls */}
+                  <div className="series-controls">
+                    <button
+                      className="btn-series-nav btn-prev"
+                      onClick={() =>
+                        handleSelectPhoto(series.id, currentIndex - 1, series.photos.length)
+                      }
+                      aria-label={t.btn_prev}
+                    >
+                      <i
+                        className={`fas ${
+                          currentLang === 'ar' ? 'fa-arrow-right' : 'fa-arrow-left'
+                        }`}
+                      ></i>
+                      <span className="nav-text">{t.btn_prev}</span>
+                    </button>
+                    <div className="series-counter-big">
+                      <span className="current-num">
+                        {String(currentIndex + 1).padStart(2, '0')}
+                      </span>{' '}
+                      /{' '}
+                      <span className="total-num">
+                        {String(series.photos.length).padStart(2, '0')}
+                      </span>
+                    </div>
+                    <button
+                      className="btn-series-nav btn-next"
+                      onClick={() =>
+                        handleSelectPhoto(series.id, currentIndex + 1, series.photos.length)
+                      }
+                      aria-label={t.btn_next}
+                    >
+                      <span className="nav-text">{t.btn_next}</span>
+                      <i
+                        className={`fas ${
+                          currentLang === 'ar' ? 'fa-arrow-left' : 'fa-arrow-right'
+                        }`}
+                      ></i>
+                    </button>
                   </div>
-                ))}
-              </div>
 
-              {/* Clean Typographic Caption Bar */}
-              <div className="series-caption-bar">
-                <div className="series-caption-info">
-                  <span className="series-caption-idx">
-                    {String(currentIndex + 1).padStart(2, '0')}
-                  </span>
-                  <span className="series-caption-line"></span>
-                  <i className="fas fa-quote-right series-caption-quote"></i>
-                  <span className="series-caption-text">{caption}</span>
-                </div>
-              </div>
+                  {/* Filmstrip Thumbnails */}
+                  <div className="series-filmstrip" role="tablist">
+                    {series.photos.map((photo, pIdx) => (
+                      <div
+                        key={pIdx}
+                        className={`series-thumb-item ${pIdx === currentIndex ? 'active' : ''}`}
+                        onClick={() => handleSelectPhoto(series.id, pIdx, series.photos.length)}
+                        title={currentLang === 'ar' ? photo.captionAr : photo.captionEn}
+                      >
+                        <img
+                          className="series-thumb-img"
+                          src={getPhotoUrl(series.folder, photo.file)}
+                          alt={currentLang === 'ar' ? photo.captionAr : photo.captionEn}
+                          loading="lazy"
+                          onError={(e) => {
+                            const target = e.currentTarget;
+                            target.onerror = null;
+                            target.src = FALLBACK_IMAGE_URL;
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Clean Typographic Caption Bar */}
+                  <div className="series-caption-bar">
+                    <div className="series-caption-info">
+                      <span className="series-caption-idx">
+                        {String(currentIndex + 1).padStart(2, '0')}
+                      </span>
+                      <span className="series-caption-line"></span>
+                      <i className="fas fa-quote-right series-caption-quote"></i>
+                      <span className="series-caption-text">{caption}</span>
+                    </div>
+                  </div>
+                </>
+              )}
             </article>
           );
         })}

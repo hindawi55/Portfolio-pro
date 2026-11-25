@@ -422,15 +422,15 @@ export const About: React.FC<AboutProps> = ({ currentLang }) => {
           <p>{t.about_p2}</p>
           <div className="about-stats">
             <div className="stat-item">
-              <h4>2+</h4>
+              <h4>{t.stat_years_val}</h4>
               <span>{t.stat_years}</span>
             </div>
             <div className="stat-item">
-              <h4>57+</h4>
+              <h4>{t.stat_projects_val}</h4>
               <span>{t.stat_projects}</span>
             </div>
             <div className="stat-item">
-              <h4>7+</h4>
+              <h4>{t.stat_workshops_val}</h4>
               <span>{t.stat_workshops}</span>
             </div>
           </div>

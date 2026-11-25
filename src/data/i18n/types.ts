@@ -23,8 +23,11 @@ export interface TranslationDictionary {
   about_heading: string;
   about_p1: string;
   about_p2: string;
+  stat_years_val: string;
   stat_years: string;
+  stat_projects_val: string;
   stat_projects: string;
+  stat_workshops_val: string;
   stat_workshops: string;
   portfolio_label: string;
   portfolio_title: string;
@@ -139,5 +142,6 @@ export interface TranslationDictionary {
   wallart_size_small: string;
   wallart_size_large: string;
   wallart_order_btn: string;
+  footer_client_access: string;
   footer_copy: string;
 }

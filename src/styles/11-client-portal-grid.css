@@ -86,7 +86,7 @@
   font-size: 0.78rem;
   font-weight: 700;
   padding: 5px 12px;
-  border-radius: 20px;
+  border-radius: 8px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -197,7 +197,7 @@
   background: rgba(255, 255, 255, 0.03);
   border: 1px dashed rgba(226, 177, 112, 0.3);
   padding: 8px 18px;
-  border-radius: 9999px;
+  border-radius: 10px;
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;

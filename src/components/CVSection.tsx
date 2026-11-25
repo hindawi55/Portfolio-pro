@@ -1,31 +1,51 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Language } from '../types';
 import { useSiteCMS } from '../context/SiteCMSContext';
-import { safeRun } from '../utils/errorDiagnostics';
+import { safeRunAsync } from '../utils/errorDiagnostics';
+import { downloadCVAsPdf } from '../utils/cvPdfGenerator';
 
 interface CVSectionProps {
   currentLang: Language;
   onOpenFullDossier: () => void;
+  onShowToast?: (message: string) => void;
 }
 
 export const CVSection: React.FC<CVSectionProps> = ({
   currentLang,
   onOpenFullDossier,
+  onShowToast,
 }) => {
-  const { getTranslation } = useSiteCMS();
+  const { cvDossier, layout, seo, getTranslation } = useSiteCMS();
+  const [isExporting, setIsExporting] = useState(false);
   const t = getTranslation(currentLang);
 
-  const handlePrint = (e: React.MouseEvent) => {
+  const handleDownloadPdf = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    safeRun(
-      'CVSection',
-      'printCVSummary',
-      () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      const ok = await safeRunAsync(
+        'CVSection',
+        'downloadCVPdf',
+        async () => {
+          await downloadCVAsPdf({ lang: currentLang, cvDossier, layout, seo });
+          return true;
+        },
+        false,
+        'warning'
+      );
+      if (ok) {
+        onShowToast?.(
+          currentLang === 'ar'
+            ? 'تم تجهيز وتحميل ملف السيرة الذاتية (PDF) بنجاح.'
+            : 'CV Dossier (PDF) downloaded successfully.'
+        );
+      } else {
         window.print();
-      },
-      undefined,
-      'warning'
-    );
+      }
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -172,11 +192,20 @@ export const CVSection: React.FC<CVSectionProps> = ({
             <button
               type="button"
               className="btn btn-outline cv-btn-pdf"
-              onClick={handlePrint}
-              title="Download PDF"
+              onClick={handleDownloadPdf}
+              disabled={isExporting}
+              title={currentLang === 'ar' ? 'تحميل السيرة الذاتية PDF' : 'Download CV PDF'}
             >
-              <i className="fas fa-download"></i>
-              <span>{currentLang === 'ar' ? 'تحميل السيرة (PDF) ↓' : 'Download CV (PDF) ↓'}</span>
+              <i className={`fas ${isExporting ? 'fa-spinner fa-spin' : 'fa-download'}`}></i>
+              <span>
+                {isExporting
+                  ? currentLang === 'ar'
+                    ? 'جاري تجهيز الملف...'
+                    : 'Generating PDF...'
+                  : currentLang === 'ar'
+                  ? 'تحميل السيرة (PDF) ↓'
+                  : 'Download CV (PDF) ↓'}
+              </span>
             </button>
           </div>
         </div>

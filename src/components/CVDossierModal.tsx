@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Language } from '../types';
 import { useSiteCMS } from '../context/SiteCMSContext';
 import { FALLBACK_IMAGE_URL } from '../utils/assets';
-import { copyTextSafely, safeRun } from '../utils/errorDiagnostics';
+import { copyTextSafely, safeRun, safeRunAsync } from '../utils/errorDiagnostics';
+import { downloadCVAsPdf } from '../utils/cvPdfGenerator';
 import { CVManifestoWing } from './cv/CVManifestoWing';
 import {
   CVExhibitionsWing,
@@ -25,8 +26,37 @@ export const CVDossierModal: React.FC<CVDossierModalProps> = ({
   onShowToast,
 }) => {
   const [activeWing, setActiveWing] = useState<CVWing>('manifesto');
-  const { cvDossier, getTranslation } = useSiteCMS();
+  const [isExporting, setIsExporting] = useState(false);
+  const { cvDossier, layout, seo, getTranslation } = useSiteCMS();
   const t = getTranslation(currentLang);
+
+  const handleDownloadPdf = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      const ok = await safeRunAsync(
+        'CVDossierModal',
+        'downloadCVPdf',
+        async () => {
+          await downloadCVAsPdf({ lang: currentLang, cvDossier, layout, seo });
+          return true;
+        },
+        false,
+        'warning'
+      );
+      if (ok) {
+        onShowToast(
+          currentLang === 'ar'
+            ? 'تم تحميل ملف السيرة الذاتية (PDF) بنجاح.'
+            : 'CV Dossier (PDF) downloaded successfully.'
+        );
+      } else {
+        window.print();
+      }
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const handlePrint = () => {
     const ok = safeRun(
@@ -116,19 +146,35 @@ export const CVDossierModal: React.FC<CVDossierModalProps> = ({
                 type="button"
                 className="btn btn-outline dossier-btn-sm"
                 onClick={handleCopyBio}
-                title="Copy Bio"
+                title={currentLang === 'ar' ? 'نسخ البيان' : 'Copy Bio'}
               >
                 <i className="far fa-copy"></i>
                 <span>{currentLang === 'ar' ? 'نسخ البيان' : 'Copy Bio'}</span>
               </button>
               <button
                 type="button"
-                className="btn btn-primary dossier-btn-sm"
+                className="btn btn-outline dossier-btn-sm"
                 onClick={handlePrint}
-                title="Download or Print CV"
+                title={currentLang === 'ar' ? 'طباعة' : 'Print'}
               >
-                <i className="fas fa-file-pdf"></i>
-                <span>{t.btn_download_cv}</span>
+                <i className="fas fa-print"></i>
+                <span>{currentLang === 'ar' ? 'طباعة' : 'Print'}</span>
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary dossier-btn-sm"
+                onClick={handleDownloadPdf}
+                disabled={isExporting}
+                title={currentLang === 'ar' ? 'تحميل السيرة PDF' : 'Download CV PDF'}
+              >
+                <i className={`fas ${isExporting ? 'fa-spinner fa-spin' : 'fa-file-pdf'}`}></i>
+                <span>
+                  {isExporting
+                    ? currentLang === 'ar'
+                      ? 'جاري التحميل...'
+                      : 'Exporting...'
+                    : t.btn_download_cv}
+                </span>
               </button>
             </div>
 

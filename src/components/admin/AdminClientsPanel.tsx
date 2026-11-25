@@ -1,20 +1,15 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Language } from '../../types';
-import {
-  ClientProofPhoto,
-  ClientSession,
-  sampleClientSessions,
-} from '../../data/clientPortalData';
+import { ClientSession, sampleClientSessions } from '../../data/clientPortalData';
 import { ProofFeedbackRecord } from '../../types/cms';
-import { getPhotoUrl } from '../../data/portfolioData';
 import {
   deleteClientSession,
   fetchProofFeedback,
   listClientSessions,
   saveClientSession,
 } from '../../services/cmsService';
-import { extractJpegExif, optimizePhotoFile } from '../../utils/mediaExif';
 import { copyTextSafely } from '../../utils/errorDiagnostics';
+import { AdminClientSessionEditor } from './AdminClientSessionEditor';
 
 interface AdminClientsPanelProps {
   currentLang: Language;
@@ -32,9 +27,6 @@ export const AdminClientsPanel: React.FC<AdminClientsPanelProps> = ({
   const [feedbackRows, setFeedbackRows] = useState<ProofFeedbackRecord[]>([]);
   const [loadingFeedback, setLoadingFeedback] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [newPhotoUrl, setNewPhotoUrl] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isAr = currentLang === 'ar';
 
@@ -90,69 +82,6 @@ export const AdminClientsPanel: React.FC<AdminClientsPanelProps> = ({
       downloadUrl: '',
       photos: [],
     });
-  };
-
-  const handleUploadProofPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !editing) return;
-    setUploading(true);
-    try {
-      const [exif, optimized] = await Promise.all([
-        extractJpegExif(file),
-        optimizePhotoFile(file, 1080, 0.78),
-      ]);
-      const nextIdx = editing.photos.length + 1;
-      const newPhoto: ClientProofPhoto = {
-        id: `PRF-${editing.pin}-${String(nextIdx).padStart(3, '0')}`,
-        file: optimized.dataUrl,
-        folder: '/images/series-01',
-        titleAr: file.name.replace(/\.[^.]+$/, ''),
-        titleEn: file.name.replace(/\.[^.]+$/, ''),
-        resolution: `${optimized.width} × ${optimized.height}`,
-        filesize: `${optimized.sizeKb} KB`,
-        camera: exif.camera || 'Sony Alpha 7 IV',
-        lens: exif.lens || 'FE 35mm f/1.4 GM',
-        settings: exif.settings || '1/500s · f/2.0 · ISO 200',
-      };
-      setEditing({
-        ...editing,
-        photos: [...editing.photos, newPhoto],
-        totalPhotos: editing.photos.length + 1,
-      });
-      onShowToast(
-        isAr
-          ? `تمت إضافة صورة الإثبات (${optimized.sizeKb}KB WebP) مع بيانات EXIF!`
-          : `Proof photo added (${optimized.sizeKb}KB WebP) with EXIF metadata!`
-      );
-    } catch {
-      onShowToast(isAr ? 'تعذّرت معالجة الصورة.' : 'Failed to process proof photo.');
-    } finally {
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      setUploading(false);
-    }
-  };
-
-  const handleAddProofUrl = () => {
-    if (!editing || !newPhotoUrl.trim()) return;
-    const nextIdx = editing.photos.length + 1;
-    const newPhoto: ClientProofPhoto = {
-      id: `PRF-${editing.pin}-${String(nextIdx).padStart(3, '0')}`,
-      file: newPhotoUrl.trim(),
-      folder: '/images/series-01',
-      titleAr: `صورة رقم ${nextIdx}`,
-      titleEn: `Proof Frame #${nextIdx}`,
-      resolution: 'High-Res Master',
-      filesize: 'CDN Asset',
-      camera: 'Sony Alpha 7 IV',
-      lens: 'FE 35mm f/1.4 GM',
-      settings: '1/640s · f/2.2 · ISO 200',
-    };
-    setEditing({
-      ...editing,
-      photos: [...editing.photos, newPhoto],
-      totalPhotos: editing.photos.length + 1,
-    });
-    setNewPhotoUrl('');
   };
 
   const handleSaveSession = async (e: React.FormEvent) => {
@@ -222,228 +151,15 @@ export const AdminClientsPanel: React.FC<AdminClientsPanelProps> = ({
 
   if (editing) {
     return (
-      <form onSubmit={handleSaveSession} className="admin-panel-stack">
-        <div className="admin-editor-topbar">
-          <button
-            type="button"
-            className="admin-btn-ghost admin-btn-sm"
-            onClick={() => setEditing(null)}
-          >
-            <i className={`fas ${isAr ? 'fa-arrow-right' : 'fa-arrow-left'}`}></i>
-            <span>{isAr ? 'العودة لقائمة الجلسات' : 'Back to Sessions'}</span>
-          </button>
-          <strong>PIN #{editing.pin}</strong>
-        </div>
-
-        <section className="admin-card-group">
-          <div className="admin-form-grid">
-            <div className="admin-field">
-              <label>{isAr ? 'رمز المرور السري (PIN — حروف أو أرقام) *' : 'Access PIN *'}</label>
-              <input
-                type="text"
-                dir="ltr"
-                required
-                minLength={3}
-                maxLength={32}
-                value={editing.pin}
-                onChange={(e) =>
-                  setEditing({
-                    ...editing,
-                    pin: e.target.value.replace(/[^a-zA-Z0-9_-]/g, ''),
-                  })
-                }
-              />
-            </div>
-            <div className="admin-field">
-              <label>{isAr ? 'تاريخ الصلاحية' : 'Expiry Date'}</label>
-              <input
-                type="text"
-                dir="ltr"
-                value={editing.expiryDate}
-                onChange={(e) => setEditing({ ...editing, expiryDate: e.target.value })}
-              />
-            </div>
-            <div className="admin-field">
-              <label>{isAr ? 'اسم العميل / المنظمة (عربي) *' : 'Client Name (AR) *'}</label>
-              <input
-                type="text"
-                required
-                value={editing.clientNameAr}
-                onChange={(e) => setEditing({ ...editing, clientNameAr: e.target.value })}
-              />
-            </div>
-            <div className="admin-field">
-              <label>{isAr ? 'اسم العميل / المنظمة (إنجليزي) *' : 'Client Name (EN) *'}</label>
-              <input
-                type="text"
-                dir="ltr"
-                required
-                value={editing.clientNameEn}
-                onChange={(e) => setEditing({ ...editing, clientNameEn: e.target.value })}
-              />
-            </div>
-            <div className="admin-field">
-              <label>{isAr ? 'عنوان المشروع (عربي) *' : 'Project Title (AR) *'}</label>
-              <input
-                type="text"
-                required
-                value={editing.projectTitleAr}
-                onChange={(e) => setEditing({ ...editing, projectTitleAr: e.target.value })}
-              />
-            </div>
-            <div className="admin-field">
-              <label>{isAr ? 'عنوان المشروع (إنجليزي) *' : 'Project Title (EN) *'}</label>
-              <input
-                type="text"
-                dir="ltr"
-                required
-                value={editing.projectTitleEn}
-                onChange={(e) => setEditing({ ...editing, projectTitleEn: e.target.value })}
-              />
-            </div>
-            <div className="admin-field">
-              <label>{isAr ? 'حجم الحزمة / الصيغة' : 'Package Size'}</label>
-              <input
-                type="text"
-                dir="ltr"
-                value={editing.packageSize}
-                onChange={(e) => setEditing({ ...editing, packageSize: e.target.value })}
-              />
-            </div>
-            <div className="admin-field">
-              <label>{isAr ? 'رابط تحميل الأرشيف الكامل (اختياري ZIP/Drive)' : 'Master Download Archive URL (Optional)'}</label>
-              <input
-                type="url"
-                dir="ltr"
-                placeholder="https://drive.google.com/..."
-                value={editing.downloadUrl || ''}
-                onChange={(e) => setEditing({ ...editing, downloadUrl: e.target.value })}
-              />
-            </div>
-          </div>
-        </section>
-
-        <section className="admin-card-group">
-          <div className="admin-card-group-head">
-            <div>
-              <h3>
-                {isAr
-                  ? `صور جلسة الاعتماد (${editing.photos.length})`
-                  : `Session Proofing Photos (${editing.photos.length})`}
-              </h3>
-              <p>
-                {isAr
-                  ? 'ارفع صور الإثبات للعميل مباشرة أو أضف روابط CDN عالية الجودة.'
-                  : 'Upload client proof frames directly or attach high-res CDN URLs.'}
-              </p>
-            </div>
-          </div>
-
-          <div className="admin-upload-bar">
-            <button
-              type="button"
-              className="admin-btn-secondary"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-            >
-              <i className={`fas ${uploading ? 'fa-spinner fa-spin' : 'fa-cloud-upload-alt'}`}></i>
-              <span>{isAr ? 'رفع صورة إثبات' : 'Upload Proof Frame'}</span>
-            </button>
-
-            <div className="admin-url-adder">
-              <input
-                type="url"
-                dir="ltr"
-                placeholder="https://cdn.example.com/proof-01.jpg"
-                value={newPhotoUrl}
-                onChange={(e) => setNewPhotoUrl(e.target.value)}
-              />
-              <button
-                type="button"
-                className="admin-btn-ghost"
-                onClick={handleAddProofUrl}
-                disabled={!newPhotoUrl.trim()}
-              >
-                <i className="fas fa-plus"></i>
-                <span>{isAr ? 'إضافة رابط' : 'Add URL'}</span>
-              </button>
-            </div>
-          </div>
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            onChange={handleUploadProofPhoto}
-            style={{ display: 'none' }}
-          />
-
-          <div className="admin-photo-editor-list">
-            {editing.photos.map((photo, idx) => (
-              <div key={photo.id + idx} className="admin-photo-editor-card">
-                <img
-                  src={getPhotoUrl(photo.folder, photo.file)}
-                  alt={photo.titleEn}
-                  className="admin-photo-thumb"
-                />
-                <div className="admin-photo-fields">
-                  <div className="admin-form-grid">
-                    <div className="admin-field">
-                      <label>{isAr ? 'رمز الصورة (ID)' : 'Frame ID'}</label>
-                      <input
-                        type="text"
-                        dir="ltr"
-                        value={photo.id}
-                        onChange={(e) => {
-                          const next = editing.photos.map((p, i) =>
-                            i === idx
-                              ? { ...p, id: e.target.value.replace(/[^a-zA-Z0-9_-]/g, '') }
-                              : p
-                          );
-                          setEditing({ ...editing, photos: next });
-                        }}
-                      />
-                    </div>
-                    <div className="admin-field">
-                      <label>{isAr ? 'العنوان (عربي)' : 'Title (AR)'}</label>
-                      <input
-                        type="text"
-                        value={photo.titleAr}
-                        onChange={(e) => {
-                          const next = editing.photos.map((p, i) =>
-                            i === idx ? { ...p, titleAr: e.target.value } : p
-                          );
-                          setEditing({ ...editing, photos: next });
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    className="admin-btn-danger admin-btn-sm"
-                    onClick={() =>
-                      setEditing({
-                        ...editing,
-                        photos: editing.photos.filter((_, i) => i !== idx),
-                      })
-                    }
-                  >
-                    <i className="fas fa-trash-alt"></i>
-                    <span>{isAr ? 'حذف الصورة' : 'Remove'}</span>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <div className="admin-save-bar">
-          <button type="submit" className="admin-btn-primary" disabled={saving}>
-            <i className={`fas ${saving ? 'fa-spinner fa-spin' : 'fa-save'}`}></i>
-            <span>{isAr ? 'حفظ ونشر جلسة العميل سحابياً' : 'Publish Client Session'}</span>
-          </button>
-        </div>
-      </form>
+      <AdminClientSessionEditor
+        currentLang={currentLang}
+        editing={editing}
+        saving={saving}
+        onChange={setEditing}
+        onCancel={() => setEditing(null)}
+        onSave={handleSaveSession}
+        onShowToast={onShowToast}
+      />
     );
   }
 
