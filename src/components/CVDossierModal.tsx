@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Language } from '../types';
 import { useSiteCMS } from '../context/SiteCMSContext';
 import { FALLBACK_IMAGE_URL } from '../utils/assets';
@@ -27,11 +27,43 @@ export const CVDossierModal: React.FC<CVDossierModalProps> = ({
 }) => {
   const [activeWing, setActiveWing] = useState<CVWing>('manifesto');
   const [isExporting, setIsExporting] = useState(false);
+  const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
+  const menuContainerRef = useRef<HTMLDivElement>(null);
   const { cvDossier, layout, seo, getTranslation } = useSiteCMS();
   const t = getTranslation(currentLang);
 
+  useEffect(() => {
+    const handleOutside = (e: MouseEvent | TouchEvent) => {
+      if (
+        actionsMenuOpen &&
+        menuContainerRef.current &&
+        !menuContainerRef.current.contains(e.target as Node)
+      ) {
+        setActionsMenuOpen(false);
+      }
+    };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (actionsMenuOpen) {
+          setActionsMenuOpen(false);
+        } else {
+          onClose();
+        }
+      }
+    };
+    document.addEventListener('mousedown', handleOutside);
+    document.addEventListener('touchstart', handleOutside);
+    window.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleOutside);
+      document.removeEventListener('touchstart', handleOutside);
+      window.removeEventListener('keydown', handleKey);
+    };
+  }, [actionsMenuOpen, onClose]);
+
   const handleDownloadPdf = async () => {
     if (isExporting) return;
+    setActionsMenuOpen(false);
     setIsExporting(true);
     try {
       const ok = await safeRunAsync(
@@ -47,11 +79,15 @@ export const CVDossierModal: React.FC<CVDossierModalProps> = ({
       if (ok) {
         onShowToast(
           currentLang === 'ar'
-            ? 'تم تحميل ملف السيرة الذاتية (PDF) بنجاح.'
+            ? 'تم تجهيز وتحميل ملف السيرة الذاتية (PDF) بنجاح.'
             : 'CV Dossier (PDF) downloaded successfully.'
         );
       } else {
-        window.print();
+        onShowToast(
+          currentLang === 'ar'
+            ? 'تعذّر إنشاء ملف PDF في هذا المتصفح، يمكنك استخدام خيار الطباعة.'
+            : 'Unable to export PDF in this browser; please try Print.'
+        );
       }
     } finally {
       setIsExporting(false);
@@ -59,6 +95,7 @@ export const CVDossierModal: React.FC<CVDossierModalProps> = ({
   };
 
   const handlePrint = () => {
+    setActionsMenuOpen(false);
     const ok = safeRun(
       'CVDossierModal',
       'printCVDocument',
@@ -79,6 +116,7 @@ export const CVDossierModal: React.FC<CVDossierModalProps> = ({
   };
 
   const handleCopyBio = async () => {
+    setActionsMenuOpen(false);
     const bioText =
       currentLang === 'ar' ? cvDossier.artistStatementAr : cvDossier.artistStatementEn;
     const copied = await copyTextSafely('CVDossierModal', bioText);
@@ -141,6 +179,7 @@ export const CVDossierModal: React.FC<CVDossierModalProps> = ({
           </div>
 
           <div className="dossier-header-controls">
+            {/* Desktop / Wide Tablet Actions Cluster */}
             <div className="dossier-action-cluster">
               <button
                 type="button"
@@ -176,6 +215,88 @@ export const CVDossierModal: React.FC<CVDossierModalProps> = ({
                     : t.btn_download_cv}
                 </span>
               </button>
+            </div>
+
+            {/* Unified Mobile Action Trigger + Popover Menu */}
+            <div className="dossier-mobile-actions-wrap" ref={menuContainerRef}>
+              <button
+                type="button"
+                className={`dossier-mobile-trigger ${actionsMenuOpen ? 'is-open' : ''}`}
+                onClick={() => setActionsMenuOpen((prev) => !prev)}
+                aria-expanded={actionsMenuOpen}
+                aria-haspopup="menu"
+                disabled={isExporting}
+              >
+                <span className="dossier-mobile-trigger-label">
+                  <i className={`fas ${isExporting ? 'fa-spinner fa-spin' : 'fa-file-export'}`}></i>
+                  <span>
+                    {isExporting
+                      ? currentLang === 'ar'
+                        ? 'جاري تجهيز PDF...'
+                        : 'Exporting PDF...'
+                      : currentLang === 'ar'
+                      ? 'تصدير وإجراءات السيرة'
+                      : 'Export & Dossier Actions'}
+                  </span>
+                </span>
+                <i className="fas fa-chevron-down dossier-mobile-chevron" aria-hidden="true"></i>
+              </button>
+
+              {actionsMenuOpen && (
+                <div className="dossier-mobile-menu" role="menu">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="dossier-mobile-menu-item is-primary"
+                    onClick={handleDownloadPdf}
+                    disabled={isExporting}
+                  >
+                    <span className="dossier-menu-icon">
+                      <i className="fas fa-file-pdf"></i>
+                    </span>
+                    <span className="dossier-menu-text">
+                      <strong>{t.btn_download_cv}</strong>
+                      <small>
+                        {currentLang === 'ar' ? 'ملف A4 عالي الدقة' : 'Verified A4 Document'}
+                      </small>
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="dossier-mobile-menu-item"
+                    onClick={handlePrint}
+                  >
+                    <span className="dossier-menu-icon">
+                      <i className="fas fa-print"></i>
+                    </span>
+                    <span className="dossier-menu-text">
+                      <strong>{currentLang === 'ar' ? 'طباعة السيرة' : 'Print Dossier'}</strong>
+                      <small>
+                        {currentLang === 'ar' ? 'معاينة وطباعة مباشرة' : 'Print official view'}
+                      </small>
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="dossier-mobile-menu-item"
+                    onClick={handleCopyBio}
+                  >
+                    <span className="dossier-menu-icon">
+                      <i className="far fa-copy"></i>
+                    </span>
+                    <span className="dossier-menu-text">
+                      <strong>{currentLang === 'ar' ? 'نسخ البيان الفني' : 'Copy Bio'}</strong>
+                      <small>
+                        {currentLang === 'ar' ? 'نسخ النص التعريفي للحافظة' : 'Copy artist statement'}
+                      </small>
+                    </span>
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="dossier-controls-divider" aria-hidden="true"></div>

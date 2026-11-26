@@ -1,6 +1,14 @@
 /* Responsive Media Queries */
 @media (max-width: 1024px) {
-  .about-grid, .contact-grid {
+  .about-grid {
+    grid-template-columns: minmax(245px, 0.84fr) minmax(0, 1.16fr);
+    gap: clamp(1.5rem, 3.4vw, 2.75rem);
+    align-items: start;
+  }
+  .about-grid .vf-monograph {
+    max-width: 316px;
+  }
+  .contact-grid {
     grid-template-columns: 1fr;
     gap: clamp(2.25rem, 5vw, 3.5rem);
   }
@@ -8,6 +16,103 @@
   .mission-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: clamp(16px, 2.5vw, 24px);
+  }
+}
+
+@media (min-width: 541px) and (max-width: 768px) {
+  .about-grid {
+    grid-template-columns: minmax(206px, 0.78fr) minmax(0, 1.22fr);
+    gap: clamp(1.1rem, 2.8vw, 1.65rem);
+    align-items: start;
+  }
+  .about-grid .vf-stage {
+    padding-block-start: 0;
+    padding-inline: 0;
+  }
+  .about-grid .vf-monograph {
+    max-width: 242px;
+    gap: 12px;
+  }
+  .about-grid .vf-darkroom-bar {
+    width: 100%;
+    gap: 6px;
+  }
+  .about-grid .vf-darkroom-label {
+    font-size: 0.71rem;
+    gap: 5px;
+  }
+  .about-grid .vf-seg-btn {
+    min-height: 44px;
+    padding-block: 6px;
+    padding-inline: 8px;
+    font-size: 0.69rem;
+  }
+  .about-grid .vf-colophon {
+    width: 100%;
+    padding-block-start: 10px;
+  }
+  .about-grid .vf-colophon-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 3px 6px;
+  }
+  .about-grid .vf-colophon-identity {
+    display: contents;
+  }
+  .about-grid .vf-colophon-name {
+    flex: 1 0 100%;
+    font-size: 0.82rem;
+    margin-block-end: 1px;
+  }
+  .about-grid .vf-colophon-sep {
+    display: none;
+  }
+  .about-grid .vf-colophon-role {
+    font-size: 0.7rem;
+  }
+  .about-grid .vf-colophon-plate {
+    font-size: 0.62rem;
+    letter-spacing: 0.55px;
+    margin-inline-start: auto;
+  }
+  .about-grid .about-content h3 {
+    font-size: clamp(1.15rem, 2.5vw, 1.42rem);
+    margin-block: 0 10px;
+  }
+  .about-grid .about-content p {
+    font-size: 0.91rem;
+    line-height: 1.62;
+  }
+  .about-grid .about-content p + p {
+    margin-block-start: 10px;
+  }
+  .about-grid .about-stats {
+    margin-block-start: 1rem;
+    padding-block: 0.85rem;
+  }
+  .about-grid .stat-item {
+    padding-inline: 4px;
+  }
+  .about-grid .stat-item h4 {
+    font-size: clamp(1.4rem, 3vw, 1.85rem);
+    margin-block: 0 4px;
+  }
+  .about-grid .stat-item span {
+    font-size: clamp(0.64rem, 1.65vw, 0.72rem);
+    line-height: 1.35;
+  }
+}
+
+@media (max-width: 540px) {
+  .about-grid {
+    grid-template-columns: 1fr;
+    gap: clamp(2rem, 5vw, 2.75rem);
+    align-items: center;
+  }
+  .about-grid .vf-monograph {
+    max-width: 344px;
   }
 }
 
@@ -321,7 +426,8 @@
   .vf-stage {
     padding-block: 4px 12px;
   }
-  .vf-card {
+  .vf-card,
+  .vf-monograph {
     max-width: 340px;
   }
   .section {

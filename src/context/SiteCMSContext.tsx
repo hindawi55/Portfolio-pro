@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signInWithPopup, signOut, User } from 'firebase/auth';
-import { auth, googleAuthProvider } from '../lib/firebase';
+import { auth, checkFirestoreReachable, googleAuthProvider } from '../lib/firebase';
 import { DEFAULT_THEME_CONFIG, SiteThemeConfig } from '../data/themePresets';
 import { applySiteTheme } from '../utils/themeEngine';
 import { Language, PhotoSeries } from '../types';
@@ -87,8 +87,12 @@ export const SiteCMSProvider: React.FC<{ children: React.ReactNode }> = ({ child
     );
   }, [seo]);
 
-  const refreshCloudData = useCallback(async () => {
+  const refreshCloudData = useCallback(async (forceProbe = false) => {
     try {
+      const reachable = await checkFirestoreReachable(forceProbe);
+      if (!reachable) {
+        return;
+      }
       const [cfg, series, cv] = await Promise.all([
         fetchPublicSiteConfig(),
         fetchPortfolioSeries(isAdmin),

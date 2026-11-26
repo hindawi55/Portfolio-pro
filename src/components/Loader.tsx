@@ -17,12 +17,27 @@ function markIntroSeenInSession() {
 }
 
 function resolveFStopLabel(progress: number): string {
-  if (progress >= 94) return 'f/1.4';
-  if (progress >= 76) return 'f/2.0';
-  if (progress >= 56) return 'f/2.8';
-  if (progress >= 36) return 'f/4.0';
-  if (progress >= 16) return 'f/5.6';
-  return 'f/8.0';
+  // Mirrors real aperture stop down during contraction (0..38%) then wide-open pull (38..100%)
+  if (progress < 14) return 'f/2.8';
+  if (progress < 26) return 'f/5.6';
+  if (progress < 46) return 'f/8.0';
+  if (progress < 64) return 'f/4.0';
+  if (progress < 82) return 'f/2.0';
+  return 'f/1.4';
+}
+
+function resolveIrisSwingDeg(progress: number): number {
+  // Smooth two-phase mechanical cycle:
+  // 0% -> 38%: blades emerge from bezel and swing inward (-8° -> +41°), contracting the pupil
+  // 38% -> 100%: blades sweep outward (+41° -> -19°), folding cleanly behind the housing rim at f/1.4
+  if (progress <= 38) {
+    const t = Math.max(0, Math.min(1, progress / 38));
+    const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    return -8 + eased * 49;
+  }
+  const t = Math.max(0, Math.min(1, (progress - 38) / 62));
+  const eased = 1 - Math.pow(1 - t, 3);
+  return 41 - eased * 60;
 }
 
 const APERTURE_BLADES = [0, 45, 90, 135, 180, 225, 270, 315];
@@ -90,11 +105,20 @@ export const Loader: React.FC<LoaderProps> = ({ currentLang }) => {
     };
     window.addEventListener('keydown', handleKeyDown);
 
-    // Accessible reduced-motion mode: static clear frame (held for visual QA review unless ?intro=hold)
+    const seenInSession = (() => {
+      try {
+        return sessionStorage.getItem(INTRO_SEEN_KEY) === '1';
+      } catch {
+        return false;
+      }
+    })();
+
+    // Accessible reduced-motion mode: static clear frame with calm fade (unless ?intro=hold)
     if (prefersReducedMotion) {
       setProgress(100);
       setLocked(true);
       if (!isHoldPreview) {
+        const reducedHoldMs = seenInSession ? 650 : 1100;
         lockTimer = window.setTimeout(() => {
           if (cancelled || skippedRef.current) return;
           markIntroSeenInSession();
@@ -102,7 +126,7 @@ export const Loader: React.FC<LoaderProps> = ({ currentLang }) => {
           unmountTimer = window.setTimeout(() => {
             if (!cancelled) setUnmounted(true);
           }, 420);
-        }, 5500);
+        }, reducedHoldMs);
       }
 
       return () => {
@@ -113,10 +137,10 @@ export const Loader: React.FC<LoaderProps> = ({ currentLang }) => {
       };
     }
 
-    // Visual QA Inspection Timing (3.5s smooth iris focus + 5.5s shutter-lock hold)
-    const calibrationMs = 3500;
-    const holdDwellMs = 5500;
-    const curtainExitMs = 750;
+    // Global production timing: 3.0s first visit (1.95s iris + 0.35s hold + 0.70s exit), 2.0s repeat visit
+    const calibrationMs = seenInSession ? 1150 : 1950;
+    const holdDwellMs = seenInSession ? 200 : 350;
+    const curtainExitMs = seenInSession ? 650 : 700;
 
     const runSequence = () => {
       if (cancelled || skippedRef.current) return;
@@ -126,11 +150,7 @@ export const Loader: React.FC<LoaderProps> = ({ currentLang }) => {
         if (cancelled || skippedRef.current) return;
         const elapsed = now - start;
         const ratio = Math.min(1, elapsed / calibrationMs);
-        const eased =
-          ratio < 0.5
-            ? 4 * ratio * ratio * ratio
-            : 1 - Math.pow(-2 * ratio + 2, 3) / 2;
-        setProgress(Math.round(eased * 100));
+        setProgress(Math.round(ratio * 100));
 
         if (ratio < 1) {
           rafId = window.requestAnimationFrame(tick);
@@ -181,9 +201,18 @@ export const Loader: React.FC<LoaderProps> = ({ currentLang }) => {
 
   const pctStr = `${String(progress).padStart(3, '0')}%`;
   const fStop = resolveFStopLabel(progress);
-  const irisRotation = -18 + (progress / 100) * 18;
-  const irisScale = 0.92 + (progress / 100) * 0.1;
-  const focusBlurPx = Math.max(0, 4 * (1 - Math.min(1, progress / 52)));
+  const bladeSwingDeg = resolveIrisSwingDeg(progress);
+  const barrelRotationDeg = -14 + (progress / 100) * 14;
+  const focusBlurPx =
+    progress < 38
+      ? 1.2 + (progress / 38) * 2.2
+      : Math.max(0, 3.4 * (1 - Math.min(1, (progress - 38) / 48)));
+
+  const statusText = locked
+    ? 'SHUTTER READY'
+    : progress < 38
+    ? 'STOPPING DOWN'
+    : 'PULLING FOCUS';
 
   return (
     <div
@@ -196,72 +225,67 @@ export const Loader: React.FC<LoaderProps> = ({ currentLang }) => {
       <div className="loader-shutter-blade loader-shutter-top" aria-hidden="true" />
       <div className="loader-shutter-blade loader-shutter-bottom" aria-hidden="true" />
 
-      {/* Anti-Banding Smooth Ambient Vignette & Subtle Film Grain */}
-      <div className="loader-ambient" aria-hidden="true" />
-      <div className="loader-grain" aria-hidden="true" />
-
-      {/* Clear-Center Optical Iris Ring (blades stay strictly on the outer perimeter) */}
+      {/* Precision Mechanical Pivot-Pin Iris & Cardinal Crosshairs (Option A) */}
       <div
         className="loader-iris-stage"
         aria-hidden="true"
         style={{
-          transform: `translate(-50%, -50%) scale(${irisScale.toFixed(3)}) rotate(${irisRotation.toFixed(1)}deg)`,
+          transform: `translate(-50%, -50%) rotate(${barrelRotationDeg.toFixed(1)}deg)`,
         }}
       >
         <svg viewBox="0 0 400 400" className="loader-iris-svg">
-          {/* Outer degree barrel ring */}
+          <defs>
+            <clipPath id="loaderIrisClip">
+              <circle cx="200" cy="200" r="172" />
+            </clipPath>
+          </defs>
+
+          {/* Outer Focus Barrel Scale */}
           <circle
             cx="200"
             cy="200"
-            r="186"
+            r="188"
             fill="none"
             stroke="currentColor"
-            strokeWidth="0.9"
+            strokeWidth="0.95"
             strokeDasharray="2 9"
-            opacity="0.45"
+            opacity="0.48"
           />
+
+          {/* 4 Cardinal Optical Calibration Marks (Strictly Outside Dotted Scale, Clear Gap) */}
+          <g className="loader-iris-crosshairs" stroke="currentColor" strokeLinecap="round">
+            <line x1="200" y1="2" x2="200" y2="9" strokeWidth="1.5" opacity="0.88" />
+            <line x1="200" y1="391" x2="200" y2="398" strokeWidth="1.5" opacity="0.88" />
+            <line x1="2" y1="200" x2="9" y2="200" strokeWidth="1.5" opacity="0.88" />
+            <line x1="391" y1="200" x2="398" y2="200" strokeWidth="1.5" opacity="0.88" />
+          </g>
+
+          {/* Clipped 8-Blade Overlapping Mechanical Diaphragm */}
+          <g clipPath="url(#loaderIrisClip)">
+            {APERTURE_BLADES.map((angle) => (
+              <path
+                key={angle}
+                d="M 200 28 C 295 -30, 395 -8, 425 98 Q 392 106, 358 112 Q 288 58, 200 28 Z"
+                className="loader-iris-blade"
+                transform={`rotate(${angle} 200 200) rotate(${bladeSwingDeg.toFixed(2)} 200 28)`}
+              />
+            ))}
+          </g>
+
+          {/* Crisp Lens Housing Rim */}
           <circle
             cx="200"
             cy="200"
-            r="174"
+            r="172"
             fill="none"
             stroke="currentColor"
-            strokeWidth="0.8"
-            opacity="0.22"
-          />
-          {/* Perimeter octagonal diaphragm chords (tangent outside r=134 so center stays 100% clear) */}
-          {APERTURE_BLADES.map((angle) => (
-            <line
-              key={angle}
-              x1="92"
-              y1="66"
-              x2="322"
-              y2="66"
-              stroke="currentColor"
-              strokeWidth="0.85"
-              opacity="0.34"
-              transform={`rotate(${angle} 200 200)`}
-            />
-          ))}
-          {/* Clean inner clear aperture ring */}
-          <circle
-            cx="200"
-            cy="200"
-            r="134"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="0.9"
-            opacity="0.28"
+            strokeWidth="1.1"
+            opacity="0.46"
           />
         </svg>
       </div>
 
       <div className="loader-core">
-        <span className="loader-reticle tl" aria-hidden="true" />
-        <span className="loader-reticle tr" aria-hidden="true" />
-        <span className="loader-reticle bl" aria-hidden="true" />
-        <span className="loader-reticle br" aria-hidden="true" />
-
         <div className="loader-kicker" dir="ltr">
           <span>35MM</span>
           <span className="loader-kicker-dot">·</span>
@@ -287,25 +311,11 @@ export const Loader: React.FC<LoaderProps> = ({ currentLang }) => {
             />
           </div>
           <div className="loader-meter-row" dir="ltr">
-            <span className="loader-status-label">
-              {locked ? 'SHUTTER READY' : 'PULLING FOCUS'}
-            </span>
+            <span className="loader-status-label">{statusText}</span>
             <span className="loader-meter-pct">{pctStr}</span>
           </div>
         </div>
       </div>
-
-      {!parting && (
-        <button
-          type="button"
-          className="loader-skip-btn"
-          onClick={triggerExit}
-          aria-label={activeLang === 'ar' ? 'تخطي شاشة الافتتاح' : 'Skip intro'}
-        >
-          <span>{activeLang === 'ar' ? 'تخطي' : 'Skip'}</span>
-          <i className={`fas ${activeLang === 'ar' ? 'fa-chevron-left' : 'fa-chevron-right'}`} />
-        </button>
-      )}
     </div>
   );
 };
